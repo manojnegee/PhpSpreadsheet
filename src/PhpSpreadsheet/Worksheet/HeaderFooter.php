@@ -3,29 +3,8 @@
 namespace PhpOffice\PhpSpreadsheet\Worksheet;
 
 /**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not,241 write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- *
  * <code>
- * Header/Footer Formatting Syntax taken from Office Open XML Part 4 - Markup Language Reference, page 1970:
+ * Header/Footer Formatting Syntax taken from Office Open XML Part 4 - Markup Language Reference, page 1970:.
  *
  * There are a number of formatting codes that can be written inline with the actual header / footer text, which
  * affect the formatting in the header or footer.
@@ -86,7 +65,7 @@ namespace PhpOffice\PhpSpreadsheet\Worksheet;
  */
 class HeaderFooter
 {
-    /* Header/footer image location */
+    // Header/footer image location
     const IMAGE_HEADER_LEFT = 'LH';
     const IMAGE_HEADER_CENTER = 'CH';
     const IMAGE_HEADER_RIGHT = 'RH';
@@ -339,7 +318,7 @@ class HeaderFooter
      *
      * @return HeaderFooter
      */
-    public function setDifferentOddEven($pValue = false)
+    public function setDifferentOddEven($pValue)
     {
         $this->differentOddEven = $pValue;
 
@@ -363,7 +342,7 @@ class HeaderFooter
      *
      * @return HeaderFooter
      */
-    public function setDifferentFirst($pValue = false)
+    public function setDifferentFirst($pValue)
     {
         $this->differentFirst = $pValue;
 
@@ -387,7 +366,7 @@ class HeaderFooter
      *
      * @return HeaderFooter
      */
-    public function setScaleWithDocument($pValue = true)
+    public function setScaleWithDocument($pValue)
     {
         $this->scaleWithDocument = $pValue;
 
@@ -411,7 +390,7 @@ class HeaderFooter
      *
      * @return HeaderFooter
      */
-    public function setAlignWithMargins($pValue = true)
+    public function setAlignWithMargins($pValue)
     {
         $this->alignWithMargins = $pValue;
 
@@ -424,11 +403,9 @@ class HeaderFooter
      * @param HeaderFooterDrawing $image
      * @param string $location
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     *
      * @return HeaderFooter
      */
-    public function addImage(HeaderFooterDrawing $image = null, $location = self::IMAGE_HEADER_LEFT)
+    public function addImage(HeaderFooterDrawing $image, $location = self::IMAGE_HEADER_LEFT)
     {
         $this->headerFooterImages[$location] = $image;
 
@@ -439,8 +416,6 @@ class HeaderFooter
      * Remove header/footer image.
      *
      * @param string $location
-     *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
      *
      * @return HeaderFooter
      */
@@ -458,16 +433,10 @@ class HeaderFooter
      *
      * @param HeaderFooterDrawing[] $images
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     *
      * @return HeaderFooter
      */
-    public function setImages($images)
+    public function setImages(array $images)
     {
-        if (!is_array($images)) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid parameter!');
-        }
-
         $this->headerFooterImages = $images;
 
         return $this;

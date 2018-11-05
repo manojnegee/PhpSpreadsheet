@@ -2,34 +2,14 @@
 
 namespace PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer;
+
 class SpContainer
 {
     /**
      * Parent Shape Group Container.
      *
-     * @var \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer
+     * @var SpgrContainer
      */
     private $parent;
 
@@ -113,7 +93,7 @@ class SpContainer
     /**
      * Set parent Shape Group Container.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer $parent
+     * @param SpgrContainer $parent
      */
     public function setParent($parent)
     {
@@ -123,7 +103,7 @@ class SpContainer
     /**
      * Get the parent Shape Group Container.
      *
-     * @return \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer
+     * @return SpgrContainer
      */
     public function getParent()
     {
@@ -135,7 +115,7 @@ class SpContainer
      *
      * @param bool $value
      */
-    public function setSpgr($value = false)
+    public function setSpgr($value)
     {
         $this->spgr = $value;
     }
@@ -250,9 +230,9 @@ class SpContainer
     /**
      * Set cell coordinates of upper-left corner of shape.
      *
-     * @param string $value
+     * @param string $value eg: 'A1'
      */
-    public function setStartCoordinates($value = 'A1')
+    public function setStartCoordinates($value)
     {
         $this->startCoordinates = $value;
     }
@@ -272,7 +252,7 @@ class SpContainer
      *
      * @param int $startOffsetX
      */
-    public function setStartOffsetX($startOffsetX = 0)
+    public function setStartOffsetX($startOffsetX)
     {
         $this->startOffsetX = $startOffsetX;
     }
@@ -292,7 +272,7 @@ class SpContainer
      *
      * @param int $startOffsetY
      */
-    public function setStartOffsetY($startOffsetY = 0)
+    public function setStartOffsetY($startOffsetY)
     {
         $this->startOffsetY = $startOffsetY;
     }
@@ -310,9 +290,9 @@ class SpContainer
     /**
      * Set cell coordinates of bottom-right corner of shape.
      *
-     * @param string $value
+     * @param string $value eg: 'A1'
      */
-    public function setEndCoordinates($value = 'A1')
+    public function setEndCoordinates($value)
     {
         $this->endCoordinates = $value;
     }
@@ -332,7 +312,7 @@ class SpContainer
      *
      * @param int $endOffsetX
      */
-    public function setEndOffsetX($endOffsetX = 0)
+    public function setEndOffsetX($endOffsetX)
     {
         $this->endOffsetX = $endOffsetX;
     }
@@ -352,7 +332,7 @@ class SpContainer
      *
      * @param int $endOffsetY
      */
-    public function setEndOffsetY($endOffsetY = 0)
+    public function setEndOffsetY($endOffsetY)
     {
         $this->endOffsetY = $endOffsetY;
     }
@@ -379,7 +359,7 @@ class SpContainer
         $nestingLevel = 0;
 
         $parent = $this->getParent();
-        while ($parent instanceof \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer) {
+        while ($parent instanceof SpgrContainer) {
             ++$nestingLevel;
             $parent = $parent->getParent();
         }

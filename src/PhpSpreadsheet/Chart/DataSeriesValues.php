@@ -2,28 +2,11 @@
 
 namespace PhpOffice\PhpSpreadsheet\Chart;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category    PhpSpreadsheet
- *
- * @copyright    Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license        http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
+use PhpOffice\PhpSpreadsheet\Calculation\Functions;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+
 class DataSeriesValues
 {
     const DATASERIES_TYPE_STRING = 'String';
@@ -77,16 +60,31 @@ class DataSeriesValues
     private $dataValues = [];
 
     /**
+     * Fill color.
+     *
+     * @var string
+     */
+    private $fillColor;
+
+    /**
+     * Line Width.
+     *
+     * @var int
+     */
+    private $lineWidth = 12700;
+
+    /**
      * Create a new DataSeriesValues object.
      *
-     * @param mixed $dataType
+     * @param string $dataType
      * @param string $dataSource
      * @param null|mixed $formatCode
-     * @param mixed $pointCount
+     * @param int $pointCount
      * @param mixed $dataValues
      * @param null|mixed $marker
+     * @param null|string $fillColor
      */
-    public function __construct($dataType = self::DATASERIES_TYPE_NUMBER, $dataSource = null, $formatCode = null, $pointCount = 0, $dataValues = [], $marker = null)
+    public function __construct($dataType = self::DATASERIES_TYPE_NUMBER, $dataSource = null, $formatCode = null, $pointCount = 0, $dataValues = [], $marker = null, $fillColor = null)
     {
         $this->setDataType($dataType);
         $this->dataSource = $dataSource;
@@ -94,6 +92,7 @@ class DataSeriesValues
         $this->pointCount = $pointCount;
         $this->dataValues = $dataValues;
         $this->pointMarker = $marker;
+        $this->fillColor = $fillColor;
     }
 
     /**
@@ -111,16 +110,16 @@ class DataSeriesValues
      *
      * @param string $dataType Datatype of this data series
      *                                Typical values are:
-     *                                    \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues::DATASERIES_TYPE_STRING
+     *                                    DataSeriesValues::DATASERIES_TYPE_STRING
      *                                        Normally used for axis point values
-     *                                    \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues::DATASERIES_TYPE_NUMBER
+     *                                    DataSeriesValues::DATASERIES_TYPE_NUMBER
      *                                        Normally used for chart data values
      *
      * @throws Exception
      *
      * @return DataSeriesValues
      */
-    public function setDataType($dataType = self::DATASERIES_TYPE_NUMBER)
+    public function setDataType($dataType)
     {
         if (!in_array($dataType, self::$dataTypeValues)) {
             throw new Exception('Invalid datatype for chart data series values');
@@ -144,17 +143,12 @@ class DataSeriesValues
      * Set Series Data Source (formula).
      *
      * @param string $dataSource
-     * @param mixed $refreshDataValues
      *
      * @return DataSeriesValues
      */
-    public function setDataSource($dataSource = null, $refreshDataValues = true)
+    public function setDataSource($dataSource)
     {
         $this->dataSource = $dataSource;
-
-        if ($refreshDataValues) {
-            //    TO DO
-        }
 
         return $this;
     }
@@ -176,7 +170,7 @@ class DataSeriesValues
      *
      * @return DataSeriesValues
      */
-    public function setPointMarker($marker = null)
+    public function setPointMarker($marker)
     {
         $this->pointMarker = $marker;
 
@@ -200,7 +194,7 @@ class DataSeriesValues
      *
      * @return DataSeriesValues
      */
-    public function setFormatCode($formatCode = null)
+    public function setFormatCode($formatCode)
     {
         $this->formatCode = $formatCode;
 
@@ -218,9 +212,61 @@ class DataSeriesValues
     }
 
     /**
+     * Get fill color.
+     *
+     * @return string HEX color
+     */
+    public function getFillColor()
+    {
+        return $this->fillColor;
+    }
+
+    /**
+     * Set fill color for series.
+     *
+     * @param string $color HEX color
+     *
+     * @return   DataSeriesValues
+     */
+    public function setFillColor($color)
+    {
+        if (!preg_match('/^[a-f0-9]{6}$/i', $color)) {
+            throw new Exception('Invalid hex color for chart series');
+        }
+        $this->fillColor = $color;
+
+        return $this;
+    }
+
+    /**
+     * Get line width for series.
+     *
+     * @return int
+     */
+    public function getLineWidth()
+    {
+        return $this->lineWidth;
+    }
+
+    /**
+     * Set line width for the series.
+     *
+     * @param int $width
+     *
+     * @return DataSeriesValues
+     */
+    public function setLineWidth($width)
+    {
+        $minWidth = 12700;
+        $this->lineWidth = max($minWidth, $width);
+
+        return $this;
+    }
+
+    /**
      * Identify if the Data Series is a multi-level or a simple series.
      *
-     * @return bool|null
+     * @return null|bool
      */
     public function isMultiLevelSeries()
     {
@@ -277,34 +323,22 @@ class DataSeriesValues
      * Set Series Data Values.
      *
      * @param array $dataValues
-     * @param bool $refreshDataSource
-     *                    TRUE - refresh the value of dataSource based on the values of $dataValues
-     *                    FALSE - don't change the value of dataSource
      *
      * @return DataSeriesValues
      */
-    public function setDataValues($dataValues = [], $refreshDataSource = true)
+    public function setDataValues($dataValues)
     {
-        $this->dataValues = \PhpOffice\PhpSpreadsheet\Calculation\Functions::flattenArray($dataValues);
+        $this->dataValues = Functions::flattenArray($dataValues);
         $this->pointCount = count($dataValues);
-
-        if ($refreshDataSource) {
-            //    TO DO
-        }
 
         return $this;
     }
 
-    private function stripNulls($var)
-    {
-        return $var !== null;
-    }
-
-    public function refresh(\PhpOffice\PhpSpreadsheet\Worksheet $worksheet, $flatten = true)
+    public function refresh(Worksheet $worksheet, $flatten = true)
     {
         if ($this->dataSource !== null) {
-            $calcEngine = \PhpOffice\PhpSpreadsheet\Calculation::getInstance($worksheet->getParent());
-            $newDataValues = \PhpOffice\PhpSpreadsheet\Calculation::unwrapResult(
+            $calcEngine = Calculation::getInstance($worksheet->getParent());
+            $newDataValues = Calculation::unwrapResult(
                 $calcEngine->_calculateFormulaValue(
                     '=' . $this->dataSource,
                     null,
@@ -312,7 +346,7 @@ class DataSeriesValues
                 )
             );
             if ($flatten) {
-                $this->dataValues = \PhpOffice\PhpSpreadsheet\Calculation\Functions::flattenArray($newDataValues);
+                $this->dataValues = Functions::flattenArray($newDataValues);
                 foreach ($this->dataValues as &$dataValue) {
                     if ((!empty($dataValue)) && ($dataValue[0] == '#')) {
                         $dataValue = 0.0;
@@ -320,14 +354,10 @@ class DataSeriesValues
                 }
                 unset($dataValue);
             } else {
-                $cellRange = explode('!', $this->dataSource);
-                if (count($cellRange) > 1) {
-                    list(, $cellRange) = $cellRange;
-                }
-
-                $dimensions = \PhpOffice\PhpSpreadsheet\Cell::rangeDimension(str_replace('$', '', $cellRange));
+                list($worksheet, $cellRange) = Worksheet::extractSheetTitle($this->dataSource, true);
+                $dimensions = Coordinate::rangeDimension(str_replace('$', '', $cellRange));
                 if (($dimensions[0] == 1) || ($dimensions[1] == 1)) {
-                    $this->dataValues = \PhpOffice\PhpSpreadsheet\Calculation\Functions::flattenArray($newDataValues);
+                    $this->dataValues = Functions::flattenArray($newDataValues);
                 } else {
                     $newArray = array_values(array_shift($newDataValues));
                     foreach ($newArray as $i => $newDataSet) {

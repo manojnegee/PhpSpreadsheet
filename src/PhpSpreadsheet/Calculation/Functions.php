@@ -2,47 +2,21 @@
 
 namespace PhpOffice\PhpSpreadsheet\Calculation;
 
-/* MAX_VALUE */
-define('MAX_VALUE', 1.2e308);
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
 
-/* 2 / PI */
-define('M_2DIVPI', 0.63661977236758134307553505349006);
-
-/* MAX_ITERATIONS */
-define('MAX_ITERATIONS', 256);
-
-/* PRECISION */
-define('PRECISION', 8.88E-016);
-
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category    PhpSpreadsheet
- *
- * @copyright   Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
 class Functions
 {
+    const PRECISION = 8.88E-016;
+
+    /**
+     * 2 / PI.
+     */
+    const M_2DIVPI = 0.63661977236758134307553505349006;
+
     /** constants */
     const COMPATIBILITY_EXCEL = 'Excel';
     const COMPATIBILITY_GNUMERIC = 'Gnumeric';
     const COMPATIBILITY_OPENOFFICE = 'OpenOfficeCalc';
-
     const RETURNDATE_PHP_NUMERIC = 'P';
     const RETURNDATE_PHP_OBJECT = 'O';
     const RETURNDATE_EXCEL = 'E';
@@ -293,22 +267,22 @@ class Functions
     public static function ifCondition($condition)
     {
         $condition = self::flattenSingleValue($condition);
-        if (!isset($condition[0])) {
+        if (!isset($condition[0]) && !is_numeric($condition)) {
             $condition = '=""';
         }
         if (!in_array($condition[0], ['>', '<', '='])) {
             if (!is_numeric($condition)) {
-                $condition = \PhpOffice\PhpSpreadsheet\Calculation::wrapResult(strtoupper($condition));
+                $condition = Calculation::wrapResult(strtoupper($condition));
             }
 
             return '=' . $condition;
         }
-        preg_match('/([<>=]+)(.*)/', $condition, $matches);
+        preg_match('/(=|<[>=]?|>=?)(.*)/', $condition, $matches);
         list(, $operator, $operand) = $matches;
 
         if (!is_numeric($operand)) {
             $operand = str_replace('"', '""', $operand);
-            $operand = \PhpOffice\PhpSpreadsheet\Calculation::wrapResult(strtoupper($operand));
+            $operand = Calculation::wrapResult(strtoupper($operand));
         }
 
         return $operator . $operand;
@@ -345,11 +319,11 @@ class Functions
      */
     public static function isBlank($value = null)
     {
-        if (!is_null($value)) {
+        if ($value !== null) {
             $value = self::flattenSingleValue($value);
         }
 
-        return is_null($value);
+        return $value === null;
     }
 
     /**
@@ -381,7 +355,7 @@ class Functions
             return false;
         }
 
-        return in_array($value, array_values(self::$errorCodes));
+        return in_array($value, self::$errorCodes);
     }
 
     /**
@@ -403,7 +377,7 @@ class Functions
      *
      * @param mixed $value Value to check
      *
-     * @return string|bool
+     * @return bool|string
      */
     public static function isEven($value = null)
     {
@@ -423,7 +397,7 @@ class Functions
      *
      * @param mixed $value Value to check
      *
-     * @return string|bool
+     * @return bool|string
      */
     public static function isOdd($value = null)
     {
@@ -501,8 +475,7 @@ class Functions
      *
      * Returns a value converted to a number
      *
-     * @param value The value you want converted
-     * @param null|mixed $value
+     * @param null|mixed $value The value you want converted
      *
      * @return number N converts values listed in the following table
      *        If value is or refers to N returns
@@ -531,6 +504,7 @@ class Functions
                 if ((strlen($value) > 0) && ($value[0] == '#')) {
                     return $value;
                 }
+
                 break;
         }
 
@@ -542,8 +516,7 @@ class Functions
      *
      * Returns a number that identifies the type of a value
      *
-     * @param value The value you want tested
-     * @param null|mixed $value
+     * @param null|mixed $value The value you want tested
      *
      * @return number N converts values listed in the following table
      *        If value is or refers to N returns
@@ -562,7 +535,7 @@ class Functions
             //    Range of cells is an error
             if (self::isCellValue($a)) {
                 return 16;
-                //    Test for Matrix
+            //    Test for Matrix
             } elseif (self::isMatrixValue($a)) {
                 return 64;
             }
@@ -670,5 +643,31 @@ class Functions
         }
 
         return $value;
+    }
+
+    /**
+     * ISFORMULA.
+     *
+     * @param mixed $cellReference The cell to check
+     * @param Cell $pCell The current cell (containing this formula)
+     *
+     * @return bool|string
+     */
+    public static function isFormula($cellReference = '', Cell $pCell = null)
+    {
+        if ($pCell === null) {
+            return self::REF();
+        }
+
+        preg_match('/^' . Calculation::CALCULATION_REGEXP_CELLREF . '$/i', $cellReference, $matches);
+
+        $cellReference = $matches[6] . $matches[7];
+        $worksheetName = trim($matches[3], "'");
+
+        $worksheet = (!empty($worksheetName))
+            ? $pCell->getWorksheet()->getParent()->getSheetByName($worksheetName)
+            : $pCell->getWorksheet();
+
+        return $worksheet->getCell($cellReference)->isFormula();
     }
 }

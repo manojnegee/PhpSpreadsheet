@@ -2,34 +2,15 @@
 
 namespace PhpOffice\PhpSpreadsheet\Writer;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Csv extends BaseWriter implements IWriter
+use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+
+class Csv extends BaseWriter
 {
     /**
      * PhpSpreadsheet object.
      *
-     * @var PhpSpreadsheet
+     * @var Spreadsheet
      */
     private $spreadsheet;
 
@@ -86,9 +67,9 @@ class Csv extends BaseWriter implements IWriter
     /**
      * Create a new CSV.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet Spreadsheet object
+     * @param Spreadsheet $spreadsheet Spreadsheet object
      */
-    public function __construct(\PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet)
+    public function __construct(Spreadsheet $spreadsheet)
     {
         $this->spreadsheet = $spreadsheet;
     }
@@ -100,15 +81,15 @@ class Csv extends BaseWriter implements IWriter
      *
      * @throws Exception
      */
-    public function save($pFilename = null)
+    public function save($pFilename)
     {
         // Fetch sheet
         $sheet = $this->spreadsheet->getSheet($this->sheetIndex);
 
-        $saveDebugLog = \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadsheet)->getDebugLog()->getWriteDebugLog();
-        \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog(false);
-        $saveArrayReturnType = \PhpOffice\PhpSpreadsheet\Calculation::getArrayReturnType();
-        \PhpOffice\PhpSpreadsheet\Calculation::setArrayReturnType(\PhpOffice\PhpSpreadsheet\Calculation::RETURN_ARRAY_AS_VALUE);
+        $saveDebugLog = Calculation::getInstance($this->spreadsheet)->getDebugLog()->getWriteDebugLog();
+        Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog(false);
+        $saveArrayReturnType = Calculation::getArrayReturnType();
+        Calculation::setArrayReturnType(Calculation::RETURN_ARRAY_AS_VALUE);
 
         // Open file
         $fileHandle = fopen($pFilename, 'wb+');
@@ -147,8 +128,8 @@ class Csv extends BaseWriter implements IWriter
         // Close file
         fclose($fileHandle);
 
-        \PhpOffice\PhpSpreadsheet\Calculation::setArrayReturnType($saveArrayReturnType);
-        \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
+        Calculation::setArrayReturnType($saveArrayReturnType);
+        Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
     }
 
     /**
@@ -164,11 +145,11 @@ class Csv extends BaseWriter implements IWriter
     /**
      * Set delimiter.
      *
-     * @param string $pValue Delimiter, defaults to ,
+     * @param string $pValue Delimiter, defaults to ','
      *
      * @return CSV
      */
-    public function setDelimiter($pValue = ',')
+    public function setDelimiter($pValue)
     {
         $this->delimiter = $pValue;
 
@@ -192,7 +173,7 @@ class Csv extends BaseWriter implements IWriter
      *
      * @return CSV
      */
-    public function setEnclosure($pValue = '"')
+    public function setEnclosure($pValue)
     {
         if ($pValue == '') {
             $pValue = null;
@@ -219,7 +200,7 @@ class Csv extends BaseWriter implements IWriter
      *
      * @return CSV
      */
-    public function setLineEnding($pValue = PHP_EOL)
+    public function setLineEnding($pValue)
     {
         $this->lineEnding = $pValue;
 
@@ -243,7 +224,7 @@ class Csv extends BaseWriter implements IWriter
      *
      * @return CSV
      */
-    public function setUseBOM($pValue = false)
+    public function setUseBOM($pValue)
     {
         $this->useBOM = $pValue;
 
@@ -267,7 +248,7 @@ class Csv extends BaseWriter implements IWriter
      *
      * @return CSV
      */
-    public function setIncludeSeparatorLine($pValue = false)
+    public function setIncludeSeparatorLine($pValue)
     {
         $this->includeSeparatorLine = $pValue;
 
@@ -292,7 +273,7 @@ class Csv extends BaseWriter implements IWriter
      *
      * @return CSV
      */
-    public function setExcelCompatibility($pValue = false)
+    public function setExcelCompatibility($pValue)
     {
         $this->excelCompatibility = $pValue;
 
@@ -316,7 +297,7 @@ class Csv extends BaseWriter implements IWriter
      *
      * @return CSV
      */
-    public function setSheetIndex($pValue = 0)
+    public function setSheetIndex($pValue)
     {
         $this->sheetIndex = $pValue;
 
@@ -328,40 +309,34 @@ class Csv extends BaseWriter implements IWriter
      *
      * @param resource $pFileHandle PHP filehandle
      * @param array $pValues Array containing values in a row
-     *
-     * @throws Exception
      */
-    private function writeLine($pFileHandle = null, $pValues = null)
+    private function writeLine($pFileHandle, array $pValues)
     {
-        if (is_array($pValues)) {
-            // No leading delimiter
-            $writeDelimiter = false;
+        // No leading delimiter
+        $writeDelimiter = false;
 
-            // Build the line
-            $line = '';
+        // Build the line
+        $line = '';
 
-            foreach ($pValues as $element) {
-                // Escape enclosures
-                $element = str_replace($this->enclosure, $this->enclosure . $this->enclosure, $element);
+        foreach ($pValues as $element) {
+            // Escape enclosures
+            $element = str_replace($this->enclosure, $this->enclosure . $this->enclosure, $element);
 
-                // Add delimiter
-                if ($writeDelimiter) {
-                    $line .= $this->delimiter;
-                } else {
-                    $writeDelimiter = true;
-                }
-
-                // Add enclosed string
-                $line .= $this->enclosure . $element . $this->enclosure;
+            // Add delimiter
+            if ($writeDelimiter) {
+                $line .= $this->delimiter;
+            } else {
+                $writeDelimiter = true;
             }
 
-            // Add line ending
-            $line .= $this->lineEnding;
-
-            // Write to file
-            fwrite($pFileHandle, $line);
-        } else {
-            throw new Exception('Invalid data row passed to CSV writer.');
+            // Add enclosed string
+            $line .= $this->enclosure . $element . $this->enclosure;
         }
+
+        // Add line ending
+        $line .= $this->lineEnding;
+
+        // Write to file
+        fwrite($pFileHandle, $line);
     }
 }

@@ -2,29 +2,13 @@
 
 namespace PhpOffice\PhpSpreadsheet\Reader;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Slk extends BaseReader implements IReader
+use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
+class Slk extends BaseReader
 {
     /**
      * Input encoding.
@@ -67,8 +51,6 @@ class Slk extends BaseReader implements IReader
      *
      * @param string $pFilename
      *
-     * @throws Exception
-     *
      * @return bool
      */
     public function canRead($pFilename)
@@ -99,9 +81,11 @@ class Slk extends BaseReader implements IReader
     /**
      * Set input encoding.
      *
-     * @param string $pValue Input encoding
+     * @param string $pValue Input encoding, eg: 'ANSI'
+     *
+     * @return Slk
      */
-    public function setInputEncoding($pValue = 'ANSI')
+    public function setInputEncoding($pValue)
     {
         $this->inputEncoding = $pValue;
 
@@ -124,6 +108,8 @@ class Slk extends BaseReader implements IReader
      * @param string $pFilename
      *
      * @throws Exception
+     *
+     * @return array
      */
     public function listWorksheetInfo($pFilename)
     {
@@ -142,16 +128,13 @@ class Slk extends BaseReader implements IReader
         $worksheetInfo[0]['totalRows'] = 0;
         $worksheetInfo[0]['totalColumns'] = 0;
 
-        // Loop through file
-        $rowData = [];
-
         // loop through one row (line) at a time in the file
         $rowIndex = 0;
         while (($rowData = fgets($fileHandle)) !== false) {
             $columnIndex = 0;
 
             // convert SYLK encoded $rowData to UTF-8
-            $rowData = \PhpOffice\PhpSpreadsheet\Shared\StringHelper::SYLKtoUTF8($rowData);
+            $rowData = StringHelper::SYLKtoUTF8($rowData);
 
             // explode each row at semicolons while taking into account that literal semicolon (;)
             // is escaped like this (;;)
@@ -165,10 +148,12 @@ class Slk extends BaseReader implements IReader
                         case 'C':
                         case 'X':
                             $columnIndex = substr($rowDatum, 1) - 1;
+
                             break;
                         case 'R':
                         case 'Y':
                             $rowIndex = substr($rowDatum, 1);
+
                             break;
                     }
 
@@ -178,7 +163,7 @@ class Slk extends BaseReader implements IReader
             }
         }
 
-        $worksheetInfo[0]['lastColumnLetter'] = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($worksheetInfo[0]['lastColumnIndex']);
+        $worksheetInfo[0]['lastColumnLetter'] = Coordinate::stringFromColumnIndex($worksheetInfo[0]['lastColumnIndex'] + 1);
         $worksheetInfo[0]['totalColumns'] = $worksheetInfo[0]['lastColumnIndex'] + 1;
 
         // Close file
@@ -194,12 +179,12 @@ class Slk extends BaseReader implements IReader
      *
      * @throws Exception
      *
-     * @return \PhpOffice\PhpSpreadsheet\Spreadsheet
+     * @return Spreadsheet
      */
     public function load($pFilename)
     {
         // Create new Spreadsheet
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet();
 
         // Load into this instance
         return $this->loadIntoExisting($pFilename, $spreadsheet);
@@ -209,13 +194,13 @@ class Slk extends BaseReader implements IReader
      * Loads PhpSpreadsheet from file into PhpSpreadsheet instance.
      *
      * @param string $pFilename
-     * @param \PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet
+     * @param Spreadsheet $spreadsheet
      *
      * @throws Exception
      *
-     * @return \PhpOffice\PhpSpreadsheet\Spreadsheet
+     * @return Spreadsheet
      */
-    public function loadIntoExisting($pFilename, \PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet)
+    public function loadIntoExisting($pFilename, Spreadsheet $spreadsheet)
     {
         // Open file
         if (!$this->canRead($pFilename)) {
@@ -235,13 +220,12 @@ class Slk extends BaseReader implements IReader
         $toFormats = ['-', ' '];
 
         // Loop through file
-        $rowData = [];
         $column = $row = '';
 
         // loop through one row (line) at a time in the file
         while (($rowData = fgets($fileHandle)) !== false) {
             // convert SYLK encoded $rowData to UTF-8
-            $rowData = \PhpOffice\PhpSpreadsheet\Shared\StringHelper::SYLKtoUTF8($rowData);
+            $rowData = StringHelper::SYLKtoUTF8($rowData);
 
             // explode each row at semicolons while taking into account that literal semicolon (;)
             // is escaped like this (;;)
@@ -254,39 +238,50 @@ class Slk extends BaseReader implements IReader
                 foreach ($rowData as $rowDatum) {
                     switch ($rowDatum[0]) {
                         case 'P':
-                            $formatArray['numberformat']['code'] = str_replace($fromFormats, $toFormats, substr($rowDatum, 1));
+                            $formatArray['numberFormat']['formatCode'] = str_replace($fromFormats, $toFormats, substr($rowDatum, 1));
+
                             break;
                         case 'E':
                         case 'F':
                             $formatArray['font']['name'] = substr($rowDatum, 1);
+
                             break;
                         case 'L':
                             $formatArray['font']['size'] = substr($rowDatum, 1);
+
                             break;
                         case 'S':
                             $styleSettings = substr($rowDatum, 1);
-                            for ($i = 0; $i < strlen($styleSettings); ++$i) {
+                            $iMax = strlen($styleSettings);
+                            for ($i = 0; $i < $iMax; ++$i) {
                                 switch ($styleSettings[$i]) {
                                     case 'I':
                                         $formatArray['font']['italic'] = true;
+
                                         break;
                                     case 'D':
                                         $formatArray['font']['bold'] = true;
+
                                         break;
                                     case 'T':
-                                        $formatArray['borders']['top']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $formatArray['borders']['top']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                     case 'B':
-                                        $formatArray['borders']['bottom']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $formatArray['borders']['bottom']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                     case 'L':
-                                        $formatArray['borders']['left']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $formatArray['borders']['left']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                     case 'R':
-                                        $formatArray['borders']['right']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $formatArray['borders']['right']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                 }
                             }
+
                             break;
                     }
                 }
@@ -300,13 +295,16 @@ class Slk extends BaseReader implements IReader
                         case 'C':
                         case 'X':
                             $column = substr($rowDatum, 1);
+
                             break;
                         case 'R':
                         case 'Y':
                             $row = substr($rowDatum, 1);
+
                             break;
                         case 'K':
                             $cellData = substr($rowDatum, 1);
+
                             break;
                         case 'E':
                             $cellDataFormula = '=' . substr($rowDatum, 1);
@@ -342,7 +340,7 @@ class Slk extends BaseReader implements IReader
                                         if ($columnReference[0] == '[') {
                                             $columnReference = $column + trim($columnReference, '[]');
                                         }
-                                        $A1CellReference = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($columnReference - 1) . $rowReference;
+                                        $A1CellReference = Coordinate::stringFromColumnIndex($columnReference) . $rowReference;
 
                                         $value = substr_replace($value, $A1CellReference, $cellReference[0][1], strlen($cellReference[0][0]));
                                     }
@@ -352,19 +350,20 @@ class Slk extends BaseReader implements IReader
                             //    Then rebuild the formula string
                             $cellDataFormula = implode('"', $temp);
                             $hasCalculatedValue = true;
+
                             break;
                     }
                 }
-                $columnLetter = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column - 1);
-                $cellData = \PhpOffice\PhpSpreadsheet\Calculation::unwrapResult($cellData);
+                $columnLetter = Coordinate::stringFromColumnIndex($column);
+                $cellData = Calculation::unwrapResult($cellData);
 
                 // Set cell value
                 $spreadsheet->getActiveSheet()->getCell($columnLetter . $row)->setValue(($hasCalculatedValue) ? $cellDataFormula : $cellData);
                 if ($hasCalculatedValue) {
-                    $cellData = \PhpOffice\PhpSpreadsheet\Calculation::unwrapResult($cellData);
+                    $cellData = Calculation::unwrapResult($cellData);
                     $spreadsheet->getActiveSheet()->getCell($columnLetter . $row)->setCalculatedValue($cellData);
                 }
-            //    Read cell formatting
+                //    Read cell formatting
             } elseif ($dataType == 'F') {
                 $formatStyle = $columnWidth = $styleSettings = '';
                 $styleData = [];
@@ -373,61 +372,73 @@ class Slk extends BaseReader implements IReader
                         case 'C':
                         case 'X':
                             $column = substr($rowDatum, 1);
+
                             break;
                         case 'R':
                         case 'Y':
                             $row = substr($rowDatum, 1);
+
                             break;
                         case 'P':
                             $formatStyle = $rowDatum;
+
                             break;
                         case 'W':
                             list($startCol, $endCol, $columnWidth) = explode(' ', substr($rowDatum, 1));
+
                             break;
                         case 'S':
                             $styleSettings = substr($rowDatum, 1);
-                            for ($i = 0; $i < strlen($styleSettings); ++$i) {
+                            $iMax = strlen($styleSettings);
+                            for ($i = 0; $i < $iMax; ++$i) {
                                 switch ($styleSettings[$i]) {
                                     case 'I':
                                         $styleData['font']['italic'] = true;
+
                                         break;
                                     case 'D':
                                         $styleData['font']['bold'] = true;
+
                                         break;
                                     case 'T':
-                                        $styleData['borders']['top']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $styleData['borders']['top']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                     case 'B':
-                                        $styleData['borders']['bottom']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $styleData['borders']['bottom']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                     case 'L':
-                                        $styleData['borders']['left']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $styleData['borders']['left']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                     case 'R':
-                                        $styleData['borders']['right']['style'] = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+                                        $styleData['borders']['right']['borderStyle'] = Border::BORDER_THIN;
+
                                         break;
                                 }
                             }
+
                             break;
                     }
                 }
                 if (($formatStyle > '') && ($column > '') && ($row > '')) {
-                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column - 1);
+                    $columnLetter = Coordinate::stringFromColumnIndex($column);
                     if (isset($this->formats[$formatStyle])) {
                         $spreadsheet->getActiveSheet()->getStyle($columnLetter . $row)->applyFromArray($this->formats[$formatStyle]);
                     }
                 }
                 if ((!empty($styleData)) && ($column > '') && ($row > '')) {
-                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column - 1);
+                    $columnLetter = Coordinate::stringFromColumnIndex($column);
                     $spreadsheet->getActiveSheet()->getStyle($columnLetter . $row)->applyFromArray($styleData);
                 }
                 if ($columnWidth > '') {
                     if ($startCol == $endCol) {
-                        $startCol = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($startCol - 1);
+                        $startCol = Coordinate::stringFromColumnIndex($startCol);
                         $spreadsheet->getActiveSheet()->getColumnDimension($startCol)->setWidth($columnWidth);
                     } else {
-                        $startCol = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($startCol - 1);
-                        $endCol = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($endCol - 1);
+                        $startCol = Coordinate::stringFromColumnIndex($startCol);
+                        $endCol = Coordinate::stringFromColumnIndex($endCol);
                         $spreadsheet->getActiveSheet()->getColumnDimension($startCol)->setWidth($columnWidth);
                         do {
                             $spreadsheet->getActiveSheet()->getColumnDimension(++$startCol)->setWidth($columnWidth);
@@ -440,10 +451,12 @@ class Slk extends BaseReader implements IReader
                         case 'C':
                         case 'X':
                             $column = substr($rowDatum, 1);
+
                             break;
                         case 'R':
                         case 'Y':
                             $row = substr($rowDatum, 1);
+
                             break;
                     }
                 }
@@ -472,9 +485,9 @@ class Slk extends BaseReader implements IReader
      *
      * @param int $pValue Sheet index
      *
-     * @return SYLK
+     * @return Slk
      */
-    public function setSheetIndex($pValue = 0)
+    public function setSheetIndex($pValue)
     {
         $this->sheetIndex = $pValue;
 

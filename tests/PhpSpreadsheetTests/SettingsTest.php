@@ -2,7 +2,10 @@
 
 namespace PhpOffice\PhpSpreadsheetTests;
 
-class SettingsTest extends \PHPUnit_Framework_TestCase
+use PhpOffice\PhpSpreadsheet\Settings;
+use PHPUnit\Framework\TestCase;
+
+class SettingsTest extends TestCase
 {
     /**
      * @var string
@@ -22,16 +25,16 @@ class SettingsTest extends \PHPUnit_Framework_TestCase
 
     public function testGetXMLSettings()
     {
-        $result = \PhpOffice\PhpSpreadsheet\Settings::getLibXmlLoaderOptions();
-        $this->assertTrue((bool) ((LIBXML_DTDLOAD | LIBXML_DTDATTR) & $result));
-        $this->assertFalse(libxml_disable_entity_loader());
+        $result = Settings::getLibXmlLoaderOptions();
+        self::assertTrue((bool) ((LIBXML_DTDLOAD | LIBXML_DTDATTR) & $result));
+        self::assertFalse(libxml_disable_entity_loader());
     }
 
     public function testSetXMLSettings()
     {
-        \PhpOffice\PhpSpreadsheet\Settings::setLibXmlLoaderOptions(LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_DTDVALID);
-        $result = \PhpOffice\PhpSpreadsheet\Settings::getLibXmlLoaderOptions();
-        $this->assertTrue((bool) ((LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_DTDVALID) & $result));
-        $this->assertFalse(libxml_disable_entity_loader());
+        Settings::setLibXmlLoaderOptions(LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_DTDVALID);
+        $result = Settings::getLibXmlLoaderOptions();
+        self::assertTrue((bool) ((LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_DTDVALID) & $result));
+        self::assertFalse(libxml_disable_entity_loader());
     }
 }

@@ -2,32 +2,30 @@
 
 namespace PhpOffice\PhpSpreadsheet\Writer;
 
+use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
+use PhpOffice\PhpSpreadsheet\Calculation\Functions;
+use PhpOffice\PhpSpreadsheet\HashTable;
+use PhpOffice\PhpSpreadsheet\Shared\File;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing as WorksheetDrawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use PhpOffice\PhpSpreadsheet\Writer\Exception as WriterException;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Chart;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Comments;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\ContentTypes;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\DocProps;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Drawing;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\RelsRibbon;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\RelsVBA;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\StringTable;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Style;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Theme;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Workbook;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Worksheet;
 use ZipArchive;
 
-/**
- * Copyright (c) 2006 - 2015 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2015 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Xlsx extends BaseWriter implements IWriter
+class Xlsx extends BaseWriter
 {
     /**
      * Office2003 compatibility.
@@ -46,7 +44,7 @@ class Xlsx extends BaseWriter implements IWriter
     /**
      * Private Spreadsheet.
      *
-     * @var \PhpOffice\PhpSpreadsheet\Spreadsheet
+     * @var Spreadsheet
      */
     private $spreadSheet;
 
@@ -58,78 +56,78 @@ class Xlsx extends BaseWriter implements IWriter
     private $stringTable = [];
 
     /**
-     * Private unique \PhpOffice\PhpSpreadsheet\Style\Conditional HashTable.
+     * Private unique Conditional HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $stylesConditionalHashTable;
 
     /**
-     * Private unique \PhpOffice\PhpSpreadsheet\Style HashTable.
+     * Private unique Style HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $styleHashTable;
 
     /**
-     * Private unique \PhpOffice\PhpSpreadsheet\Style\Fill HashTable.
+     * Private unique Fill HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $fillHashTable;
 
     /**
      * Private unique \PhpOffice\PhpSpreadsheet\Style\Font HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $fontHashTable;
 
     /**
-     * Private unique \PhpOffice\PhpSpreadsheet\Style\Borders HashTable.
+     * Private unique Borders HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $bordersHashTable;
 
     /**
-     * Private unique \PhpOffice\PhpSpreadsheet\Style\NumberFormat HashTable.
+     * Private unique NumberFormat HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $numFmtHashTable;
 
     /**
-     * Private unique \PhpOffice\PhpSpreadsheet\Worksheet\BaseDrawing HashTable.
+     * Private unique \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet\BaseDrawing HashTable.
      *
-     * @var \PhpOffice\PhpSpreadsheet\HashTable
+     * @var HashTable
      */
     private $drawingHashTable;
 
     /**
      * Create a new Xlsx Writer.
      *
-     * @param \PhpOffice\PhpSpreadsheet\SpreadSheet $spreadsheet
+     * @param Spreadsheet $spreadsheet
      */
-    public function __construct(\PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet = null)
+    public function __construct(Spreadsheet $spreadsheet)
     {
         // Assign PhpSpreadsheet
         $this->setSpreadsheet($spreadsheet);
 
         $writerPartsArray = [
-            'stringtable' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\StringTable::class,
-            'contenttypes' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\ContentTypes::class,
-            'docprops' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\DocProps::class,
-            'rels' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels::class,
-            'theme' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Theme::class,
-            'style' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Style::class,
-            'workbook' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Workbook::class,
-            'worksheet' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Worksheet::class,
-            'drawing' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Drawing::class,
-            'comments' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Comments::class,
-            'chart' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Chart::class,
-            'relsvba' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\RelsVBA::class,
-            'relsribbonobjects' => \PhpOffice\PhpSpreadsheet\Writer\Xlsx\RelsRibbon::class,
+            'stringtable' => StringTable::class,
+            'contenttypes' => ContentTypes::class,
+            'docprops' => DocProps::class,
+            'rels' => Rels::class,
+            'theme' => Theme::class,
+            'style' => Style::class,
+            'workbook' => Workbook::class,
+            'worksheet' => Worksheet::class,
+            'drawing' => Drawing::class,
+            'comments' => Comments::class,
+            'chart' => Chart::class,
+            'relsvba' => RelsVBA::class,
+            'relsribbonobjects' => RelsRibbon::class,
         ];
 
         //    Initialise writer parts
@@ -139,13 +137,13 @@ class Xlsx extends BaseWriter implements IWriter
         }
 
         $hashTablesArray = ['stylesConditionalHashTable', 'fillHashTable', 'fontHashTable',
-                                  'bordersHashTable', 'numFmtHashTable', 'drawingHashTable',
-                                  'styleHashTable',
-                                ];
+            'bordersHashTable', 'numFmtHashTable', 'drawingHashTable',
+            'styleHashTable',
+        ];
 
         // Set HashTable variables
         foreach ($hashTablesArray as $tableName) {
-            $this->$tableName = new \PhpOffice\PhpSpreadsheet\HashTable();
+            $this->$tableName = new HashTable();
         }
     }
 
@@ -156,7 +154,7 @@ class Xlsx extends BaseWriter implements IWriter
      *
      * @return \PhpOffice\PhpSpreadsheet\Writer\Xlsx\WriterPart
      */
-    public function getWriterPart($pPartName = '')
+    public function getWriterPart($pPartName)
     {
         if ($pPartName != '' && isset($this->writerParts[strtolower($pPartName)])) {
             return $this->writerParts[strtolower($pPartName)];
@@ -170,9 +168,9 @@ class Xlsx extends BaseWriter implements IWriter
      *
      * @param string $pFilename
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws WriterException
      */
-    public function save($pFilename = null)
+    public function save($pFilename)
     {
         if ($this->spreadSheet !== null) {
             // garbage collect
@@ -181,16 +179,16 @@ class Xlsx extends BaseWriter implements IWriter
             // If $pFilename is php://output or php://stdout, make it a temporary file...
             $originalFilename = $pFilename;
             if (strtolower($pFilename) == 'php://output' || strtolower($pFilename) == 'php://stdout') {
-                $pFilename = @tempnam(\PhpOffice\PhpSpreadsheet\Shared\File::sysGetTempDir(), 'phpxltmp');
+                $pFilename = @tempnam(File::sysGetTempDir(), 'phpxltmp');
                 if ($pFilename == '') {
                     $pFilename = $originalFilename;
                 }
             }
 
-            $saveDebugLog = \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadSheet)->getDebugLog()->getWriteDebugLog();
-            \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadSheet)->getDebugLog()->setWriteDebugLog(false);
-            $saveDateReturnType = \PhpOffice\PhpSpreadsheet\Calculation\Functions::getReturnDateType();
-            \PhpOffice\PhpSpreadsheet\Calculation\Functions::setReturnDateType(\PhpOffice\PhpSpreadsheet\Calculation\Functions::RETURNDATE_EXCEL);
+            $saveDebugLog = Calculation::getInstance($this->spreadSheet)->getDebugLog()->getWriteDebugLog();
+            Calculation::getInstance($this->spreadSheet)->getDebugLog()->setWriteDebugLog(false);
+            $saveDateReturnType = Functions::getReturnDateType();
+            Functions::setReturnDateType(Functions::RETURNDATE_EXCEL);
 
             // Create string lookup table
             $this->stringTable = [];
@@ -217,7 +215,7 @@ class Xlsx extends BaseWriter implements IWriter
             // Try opening the ZIP file
             if ($zip->open($pFilename, ZipArchive::OVERWRITE) !== true) {
                 if ($zip->open($pFilename, ZipArchive::CREATE) !== true) {
-                    throw new \PhpOffice\PhpSpreadsheet\Writer\Exception('Could not open ' . $pFilename . ' for writing.');
+                    throw new WriterException('Could not open ' . $pFilename . ' for writing.');
                 }
             }
 
@@ -227,7 +225,7 @@ class Xlsx extends BaseWriter implements IWriter
             //if hasMacros, add the vbaProject.bin file, Certificate file(if exists)
             if ($this->spreadSheet->hasMacros()) {
                 $macrosCode = $this->spreadSheet->getMacrosCode();
-                if (!is_null($macrosCode)) {
+                if ($macrosCode !== null) {
                     // we have the code ?
                     $zip->addFromString('xl/vbaProject.bin', $macrosCode); //allways in 'xl', allways named vbaProject.bin
                     if ($this->spreadSheet->hasMacrosCertificate()) {
@@ -292,11 +290,25 @@ class Xlsx extends BaseWriter implements IWriter
                 }
             }
 
-            $chartRef1 = $chartRef2 = 0;
+            $chartRef1 = 0;
             // Add worksheet relationships (drawings, ...)
             for ($i = 0; $i < $this->spreadSheet->getSheetCount(); ++$i) {
                 // Add relationships
                 $zip->addFromString('xl/worksheets/_rels/sheet' . ($i + 1) . '.xml.rels', $this->getWriterPart('Rels')->writeWorksheetRelationships($this->spreadSheet->getSheet($i), ($i + 1), $this->includeCharts));
+
+                // Add unparsedLoadedData
+                $sheetCodeName = $this->spreadSheet->getSheet($i)->getCodeName();
+                $unparsedLoadedData = $this->spreadSheet->getUnparsedLoadedData();
+                if (isset($unparsedLoadedData['sheets'][$sheetCodeName]['ctrlProps'])) {
+                    foreach ($unparsedLoadedData['sheets'][$sheetCodeName]['ctrlProps'] as $ctrlProp) {
+                        $zip->addFromString($ctrlProp['filePath'], $ctrlProp['content']);
+                    }
+                }
+                if (isset($unparsedLoadedData['sheets'][$sheetCodeName]['printerSettings'])) {
+                    foreach ($unparsedLoadedData['sheets'][$sheetCodeName]['printerSettings'] as $ctrlProp) {
+                        $zip->addFromString($ctrlProp['filePath'], $ctrlProp['content']);
+                    }
+                }
 
                 $drawings = $this->spreadSheet->getSheet($i)->getDrawingCollection();
                 $drawingCount = count($drawings);
@@ -310,7 +322,10 @@ class Xlsx extends BaseWriter implements IWriter
                     $zip->addFromString('xl/drawings/_rels/drawing' . ($i + 1) . '.xml.rels', $this->getWriterPart('Rels')->writeDrawingRelationships($this->spreadSheet->getSheet($i), $chartRef1, $this->includeCharts));
 
                     // Drawings
-                    $zip->addFromString('xl/drawings/drawing' . ($i + 1) . '.xml', $this->getWriterPart('Drawing')->writeDrawings($this->spreadSheet->getSheet($i), $chartRef2, $this->includeCharts));
+                    $zip->addFromString('xl/drawings/drawing' . ($i + 1) . '.xml', $this->getWriterPart('Drawing')->writeDrawings($this->spreadSheet->getSheet($i), $this->includeCharts));
+                } elseif (isset($unparsedLoadedData['sheets'][$sheetCodeName]['drawingAlternateContents'])) {
+                    // Drawings
+                    $zip->addFromString('xl/drawings/drawing' . ($i + 1) . '.xml', $this->getWriterPart('Drawing')->writeDrawings($this->spreadSheet->getSheet($i), $this->includeCharts));
                 }
 
                 // Add comment relationship parts
@@ -320,6 +335,13 @@ class Xlsx extends BaseWriter implements IWriter
 
                     // Comments
                     $zip->addFromString('xl/comments' . ($i + 1) . '.xml', $this->getWriterPart('Comments')->writeComments($this->spreadSheet->getSheet($i)));
+                }
+
+                // Add unparsed relationship parts
+                if (isset($unparsedLoadedData['sheets'][$this->spreadSheet->getSheet($i)->getCodeName()]['vmlDrawings'])) {
+                    foreach ($unparsedLoadedData['sheets'][$this->spreadSheet->getSheet($i)->getCodeName()]['vmlDrawings'] as $vmlDrawing) {
+                        $zip->addFromString($vmlDrawing['filePath'], $vmlDrawing['content']);
+                    }
                 }
 
                 // Add header/footer relationship parts
@@ -339,7 +361,7 @@ class Xlsx extends BaseWriter implements IWriter
 
             // Add media
             for ($i = 0; $i < $this->getDrawingHashTable()->count(); ++$i) {
-                if ($this->getDrawingHashTable()->getByIndex($i) instanceof \PhpOffice\PhpSpreadsheet\Worksheet\Drawing) {
+                if ($this->getDrawingHashTable()->getByIndex($i) instanceof WorksheetDrawing) {
                     $imageContents = null;
                     $imagePath = $this->getDrawingHashTable()->getByIndex($i)->getPath();
                     if (strpos($imagePath, 'zip://') !== false) {
@@ -356,7 +378,7 @@ class Xlsx extends BaseWriter implements IWriter
                     }
 
                     $zip->addFromString('xl/media/' . str_replace(' ', '_', $this->getDrawingHashTable()->getByIndex($i)->getIndexedFilename()), $imageContents);
-                } elseif ($this->getDrawingHashTable()->getByIndex($i) instanceof \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing) {
+                } elseif ($this->getDrawingHashTable()->getByIndex($i) instanceof MemoryDrawing) {
                     ob_start();
                     call_user_func(
                         $this->getDrawingHashTable()->getByIndex($i)->getRenderingFunction(),
@@ -369,30 +391,30 @@ class Xlsx extends BaseWriter implements IWriter
                 }
             }
 
-            \PhpOffice\PhpSpreadsheet\Calculation\Functions::setReturnDateType($saveDateReturnType);
-            \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadSheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
+            Functions::setReturnDateType($saveDateReturnType);
+            Calculation::getInstance($this->spreadSheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
 
             // Close file
             if ($zip->close() === false) {
-                throw new \PhpOffice\PhpSpreadsheet\Writer\Exception("Could not close zip file $pFilename.");
+                throw new WriterException("Could not close zip file $pFilename.");
             }
 
             // If a temporary file was used, copy it to the correct file stream
             if ($originalFilename != $pFilename) {
                 if (copy($pFilename, $originalFilename) === false) {
-                    throw new \PhpOffice\PhpSpreadsheet\Writer\Exception("Could not copy temporary zip file $pFilename to $originalFilename.");
+                    throw new WriterException("Could not copy temporary zip file $pFilename to $originalFilename.");
                 }
                 @unlink($pFilename);
             }
         } else {
-            throw new \PhpOffice\PhpSpreadsheet\Writer\Exception('PhpSpreadsheet object unassigned.');
+            throw new WriterException('PhpSpreadsheet object unassigned.');
         }
     }
 
     /**
      * Get Spreadsheet object.
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws WriterException
      *
      * @return Spreadsheet
      */
@@ -401,17 +423,18 @@ class Xlsx extends BaseWriter implements IWriter
         if ($this->spreadSheet !== null) {
             return $this->spreadSheet;
         }
-        throw new \PhpOffice\PhpSpreadsheet\Writer\Exception('No Spreadsheet object assigned.');
+
+        throw new WriterException('No Spreadsheet object assigned.');
     }
 
     /**
      * Set Spreadsheet object.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet PhpSpreadsheet object
+     * @param Spreadsheet $spreadsheet PhpSpreadsheet object
      *
      * @return Xlsx
      */
-    public function setSpreadsheet(Spreadsheet $spreadsheet = null)
+    public function setSpreadsheet(Spreadsheet $spreadsheet)
     {
         $this->spreadSheet = $spreadsheet;
 
@@ -429,9 +452,9 @@ class Xlsx extends BaseWriter implements IWriter
     }
 
     /**
-     * Get \PhpOffice\PhpSpreadsheet\Style HashTable.
+     * Get Style HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getStyleHashTable()
     {
@@ -439,9 +462,9 @@ class Xlsx extends BaseWriter implements IWriter
     }
 
     /**
-     * Get \PhpOffice\PhpSpreadsheet\Style\Conditional HashTable.
+     * Get Conditional HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getStylesConditionalHashTable()
     {
@@ -449,9 +472,9 @@ class Xlsx extends BaseWriter implements IWriter
     }
 
     /**
-     * Get \PhpOffice\PhpSpreadsheet\Style\Fill HashTable.
+     * Get Fill HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getFillHashTable()
     {
@@ -461,7 +484,7 @@ class Xlsx extends BaseWriter implements IWriter
     /**
      * Get \PhpOffice\PhpSpreadsheet\Style\Font HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getFontHashTable()
     {
@@ -469,9 +492,9 @@ class Xlsx extends BaseWriter implements IWriter
     }
 
     /**
-     * Get \PhpOffice\PhpSpreadsheet\Style\Borders HashTable.
+     * Get Borders HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getBordersHashTable()
     {
@@ -479,9 +502,9 @@ class Xlsx extends BaseWriter implements IWriter
     }
 
     /**
-     * Get \PhpOffice\PhpSpreadsheet\Style\NumberFormat HashTable.
+     * Get NumberFormat HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getNumFmtHashTable()
     {
@@ -489,9 +512,9 @@ class Xlsx extends BaseWriter implements IWriter
     }
 
     /**
-     * Get \PhpOffice\PhpSpreadsheet\Worksheet\BaseDrawing HashTable.
+     * Get \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet\BaseDrawing HashTable.
      *
-     * @return \PhpOffice\PhpSpreadsheet\HashTable
+     * @return HashTable
      */
     public function getDrawingHashTable()
     {
@@ -515,7 +538,7 @@ class Xlsx extends BaseWriter implements IWriter
      *
      * @return Xlsx
      */
-    public function setOffice2003Compatibility($pValue = false)
+    public function setOffice2003Compatibility($pValue)
     {
         $this->office2003compatibility = $pValue;
 

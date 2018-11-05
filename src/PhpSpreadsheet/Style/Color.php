@@ -2,31 +2,11 @@
 
 namespace PhpOffice\PhpSpreadsheet\Style;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+
+class Color extends Supervisor
 {
-    /* Colors */
+    // Colors
     const COLOR_BLACK = 'FF000000';
     const COLOR_WHITE = 'FFFFFFFF';
     const COLOR_RED = 'FFFF0000';
@@ -50,14 +30,7 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @var string
      */
-    protected $argb = null;
-
-    /**
-     * Parent property name.
-     *
-     * @var string
-     */
-    protected $parentPropertyName;
+    protected $argb;
 
     /**
      * Create a new Color.
@@ -79,22 +52,6 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
         if (!$isConditional) {
             $this->argb = $pARGB;
         }
-    }
-
-    /**
-     * Bind parent. Only used for supervisor.
-     *
-     * @param mixed $parent
-     * @param string $parentPropertyName
-     *
-     * @return Color
-     */
-    public function bindParent($parent, $parentPropertyName = null)
-    {
-        $this->parent = $parent;
-        $this->parentPropertyName = $parentPropertyName;
-
-        return $this;
     }
 
     /**
@@ -124,49 +81,33 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
      */
     public function getStyleArray($array)
     {
-        switch ($this->parentPropertyName) {
-            case 'endColor':
-                $key = 'endcolor';
-                break;
-            case 'color':
-                $key = 'color';
-                break;
-            case 'startColor':
-                $key = 'startcolor';
-                break;
-        }
-
-        return $this->parent->getStyleArray([$key => $array]);
+        return $this->parent->getStyleArray([$this->parentPropertyName => $array]);
     }
 
     /**
      * Apply styles from array.
      *
      * <code>
-     * $spreadsheet->getActiveSheet()->getStyle('B2')->getFont()->getColor()->applyFromArray( array('rgb' => '808080') );
+     * $spreadsheet->getActiveSheet()->getStyle('B2')->getFont()->getColor()->applyFromArray(['rgb' => '808080']);
      * </code>
      *
      * @param array $pStyles Array containing style information
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Color
      */
-    public function applyFromArray($pStyles = null)
+    public function applyFromArray(array $pStyles)
     {
-        if (is_array($pStyles)) {
-            if ($this->isSupervisor) {
-                $this->getActiveSheet()->getStyle($this->getSelectedCells())->applyFromArray($this->getStyleArray($pStyles));
-            } else {
-                if (isset($pStyles['rgb'])) {
-                    $this->setRGB($pStyles['rgb']);
-                }
-                if (isset($pStyles['argb'])) {
-                    $this->setARGB($pStyles['argb']);
-                }
-            }
+        if ($this->isSupervisor) {
+            $this->getActiveSheet()->getStyle($this->getSelectedCells())->applyFromArray($this->getStyleArray($pStyles));
         } else {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid style array passed.');
+            if (isset($pStyles['rgb'])) {
+                $this->setRGB($pStyles['rgb']);
+            }
+            if (isset($pStyles['argb'])) {
+                $this->setARGB($pStyles['argb']);
+            }
         }
 
         return $this;
@@ -189,11 +130,11 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Set ARGB.
      *
-     * @param string $pValue
+     * @param string $pValue see self::COLOR_*
      *
      * @return Color
      */
-    public function setARGB($pValue = self::COLOR_BLACK)
+    public function setARGB($pValue)
     {
         if ($pValue == '') {
             $pValue = self::COLOR_BLACK;
@@ -229,7 +170,7 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Color
      */
-    public function setRGB($pValue = '000000')
+    public function setRGB($pValue)
     {
         if ($pValue == '') {
             $pValue = '000000';
@@ -246,8 +187,6 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
 
     /**
      * Get a specified colour component of an RGB value.
-     *
-     * @private
      *
      * @param string $RGB The colour as an RGB value (e.g. FF00CCCC or CCDDEE
      * @param int $offset Position within the RGB value to extract
@@ -373,7 +312,7 @@ class Color extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
         $pIndex = (int) $pIndex;
 
         // Indexed colors
-        if (is_null(self::$indexedColors)) {
+        if (self::$indexedColors === null) {
             self::$indexedColors = [
                 1 => 'FF000000', //  System Colour #1 - Black
                 2 => 'FFFFFFFF', //  System Colour #2 - White

@@ -2,29 +2,9 @@
 
 namespace PhpOffice\PhpSpreadsheet\Style;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Protection extends Supervisor implements \PhpOffice\PhpSpreadsheet\IComparable
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+
+class Protection extends Supervisor
 {
     /** Protection styles */
     const PROTECTION_INHERIT = 'inherit';
@@ -95,34 +75,30 @@ class Protection extends Supervisor implements \PhpOffice\PhpSpreadsheet\ICompar
      *
      * <code>
      * $spreadsheet->getActiveSheet()->getStyle('B2')->getLocked()->applyFromArray(
-     *        array(
-     *            'locked' => TRUE,
-     *            'hidden' => FALSE
-     *        )
+     *     [
+     *         'locked' => TRUE,
+     *         'hidden' => FALSE
+     *     ]
      * );
      * </code>
      *
      * @param array $pStyles Array containing style information
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Protection
      */
-    public function applyFromArray($pStyles = null)
+    public function applyFromArray(array $pStyles)
     {
-        if (is_array($pStyles)) {
-            if ($this->isSupervisor) {
-                $this->getActiveSheet()->getStyle($this->getSelectedCells())->applyFromArray($this->getStyleArray($pStyles));
-            } else {
-                if (isset($pStyles['locked'])) {
-                    $this->setLocked($pStyles['locked']);
-                }
-                if (isset($pStyles['hidden'])) {
-                    $this->setHidden($pStyles['hidden']);
-                }
-            }
+        if ($this->isSupervisor) {
+            $this->getActiveSheet()->getStyle($this->getSelectedCells())->applyFromArray($this->getStyleArray($pStyles));
         } else {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid style array passed.');
+            if (isset($pStyles['locked'])) {
+                $this->setLocked($pStyles['locked']);
+            }
+            if (isset($pStyles['hidden'])) {
+                $this->setHidden($pStyles['hidden']);
+            }
         }
 
         return $this;
@@ -145,11 +121,11 @@ class Protection extends Supervisor implements \PhpOffice\PhpSpreadsheet\ICompar
     /**
      * Set locked.
      *
-     * @param string $pValue
+     * @param string $pValue see self::PROTECTION_*
      *
      * @return Protection
      */
-    public function setLocked($pValue = self::PROTECTION_INHERIT)
+    public function setLocked($pValue)
     {
         if ($this->isSupervisor) {
             $styleArray = $this->getStyleArray(['locked' => $pValue]);
@@ -178,11 +154,11 @@ class Protection extends Supervisor implements \PhpOffice\PhpSpreadsheet\ICompar
     /**
      * Set hidden.
      *
-     * @param string $pValue
+     * @param string $pValue see self::PROTECTION_*
      *
      * @return Protection
      */
-    public function setHidden($pValue = self::PROTECTION_INHERIT)
+    public function setHidden($pValue)
     {
         if ($this->isSupervisor) {
             $styleArray = $this->getStyleArray(['hidden' => $pValue]);

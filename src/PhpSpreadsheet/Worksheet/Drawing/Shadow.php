@@ -2,31 +2,12 @@
 
 namespace PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
+use PhpOffice\PhpSpreadsheet\IComparable;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+
+class Shadow implements IComparable
 {
-    /* Shadow alignment */
+    // Shadow alignment
     const SHADOW_BOTTOM = 'b';
     const SHADOW_BOTTOM_LEFT = 'bl';
     const SHADOW_BOTTOM_RIGHT = 'br';
@@ -78,7 +59,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Color.
      *
-     * @var \PhpOffice\PhpSpreadsheet\Style\Color
+     * @var Color
      */
     private $color;
 
@@ -100,7 +81,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
         $this->distance = 2;
         $this->direction = 0;
         $this->alignment = self::SHADOW_BOTTOM_RIGHT;
-        $this->color = new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_BLACK);
+        $this->color = new Color(Color::COLOR_BLACK);
         $this->alpha = 50;
     }
 
@@ -121,7 +102,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Shadow
      */
-    public function setVisible($pValue = false)
+    public function setVisible($pValue)
     {
         $this->visible = $pValue;
 
@@ -145,7 +126,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Shadow
      */
-    public function setBlurRadius($pValue = 6)
+    public function setBlurRadius($pValue)
     {
         $this->blurRadius = $pValue;
 
@@ -169,7 +150,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Shadow
      */
-    public function setDistance($pValue = 2)
+    public function setDistance($pValue)
     {
         $this->distance = $pValue;
 
@@ -193,7 +174,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Shadow
      */
-    public function setDirection($pValue = 0)
+    public function setDirection($pValue)
     {
         $this->direction = $pValue;
 
@@ -217,7 +198,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Shadow
      */
-    public function setAlignment($pValue = 0)
+    public function setAlignment($pValue)
     {
         $this->alignment = $pValue;
 
@@ -227,7 +208,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Get Color.
      *
-     * @return \PhpOffice\PhpSpreadsheet\Style\Color
+     * @return Color
      */
     public function getColor()
     {
@@ -237,13 +218,11 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Set Color.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Style\Color $pValue
-     *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @param Color $pValue
      *
      * @return Shadow
      */
-    public function setColor(\PhpOffice\PhpSpreadsheet\Style\Color $pValue = null)
+    public function setColor(Color $pValue = null)
     {
         $this->color = $pValue;
 
@@ -267,7 +246,7 @@ class Shadow implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Shadow
      */
-    public function setAlpha($pValue = 0)
+    public function setAlpha($pValue)
     {
         $this->alpha = $pValue;
 

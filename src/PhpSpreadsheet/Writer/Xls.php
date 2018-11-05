@@ -2,34 +2,35 @@
 
 namespace PhpOffice\PhpSpreadsheet\Writer;
 
-/**
- * Copyright (c) 2006 - 2015 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2015 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Xls extends BaseWriter implements IWriter
+use PhpOffice\PhpSpreadsheet\Calculation\Calculation;
+use PhpOffice\PhpSpreadsheet\Calculation\Functions;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
+use PhpOffice\PhpSpreadsheet\RichText\Run;
+use PhpOffice\PhpSpreadsheet\Shared\Drawing as SharedDrawing;
+use PhpOffice\PhpSpreadsheet\Shared\Escher;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer\SpContainer;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE;
+use PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE\Blip;
+use PhpOffice\PhpSpreadsheet\Shared\OLE;
+use PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\File;
+use PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\Root;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\BaseDrawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use RuntimeException;
+
+class Xls extends BaseWriter
 {
     /**
      * PhpSpreadsheet object.
      *
-     * @var \PhpOffice\PhpSpreadsheet\Spreadsheet
+     * @var Spreadsheet
      */
     private $spreadsheet;
 
@@ -90,11 +91,21 @@ class Xls extends BaseWriter implements IWriter
     private $documentSummaryInformation;
 
     /**
+     * @var \PhpOffice\PhpSpreadsheet\Writer\Xls\Workbook
+     */
+    private $writerWorkbook;
+
+    /**
+     * @var \PhpOffice\PhpSpreadsheet\Writer\Xls\Worksheet[]
+     */
+    private $writerWorksheets;
+
+    /**
      * Create a new Xls Writer.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet PhpSpreadsheet object
+     * @param Spreadsheet $spreadsheet PhpSpreadsheet object
      */
-    public function __construct(\PhpOffice\PhpSpreadsheet\Spreadsheet $spreadsheet)
+    public function __construct(Spreadsheet $spreadsheet)
     {
         $this->spreadsheet = $spreadsheet;
 
@@ -108,15 +119,15 @@ class Xls extends BaseWriter implements IWriter
      *
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function save($pFilename = null)
+    public function save($pFilename)
     {
         // garbage collect
         $this->spreadsheet->garbageCollect();
 
-        $saveDebugLog = \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadsheet)->getDebugLog()->getWriteDebugLog();
-        \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog(false);
-        $saveDateReturnType = \PhpOffice\PhpSpreadsheet\Calculation\Functions::getReturnDateType();
-        \PhpOffice\PhpSpreadsheet\Calculation\Functions::setReturnDateType(\PhpOffice\PhpSpreadsheet\Calculation\Functions::RETURNDATE_EXCEL);
+        $saveDebugLog = Calculation::getInstance($this->spreadsheet)->getDebugLog()->getWriteDebugLog();
+        Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog(false);
+        $saveDateReturnType = Functions::getReturnDateType();
+        Functions::setReturnDateType(Functions::RETURNDATE_EXCEL);
 
         // initialize colors array
         $this->colors = [];
@@ -148,13 +159,13 @@ class Xls extends BaseWriter implements IWriter
 
         // add fonts from rich text eleemnts
         for ($i = 0; $i < $countSheets; ++$i) {
-            foreach ($this->writerWorksheets[$i]->phpSheet->getCellCollection() as $cellID) {
-                $cell = $this->writerWorksheets[$i]->phpSheet->getCell($cellID);
+            foreach ($this->writerWorksheets[$i]->phpSheet->getCoordinates() as $coordinate) {
+                $cell = $this->writerWorksheets[$i]->phpSheet->getCell($coordinate);
                 $cVal = $cell->getValue();
-                if ($cVal instanceof \PhpOffice\PhpSpreadsheet\RichText) {
+                if ($cVal instanceof RichText) {
                     $elements = $cVal->getRichTextElements();
                     foreach ($elements as $element) {
-                        if ($element instanceof \PhpOffice\PhpSpreadsheet\RichText\Run) {
+                        if ($element instanceof Run) {
                             $font = $element->getFont();
                             $this->writerWorksheets[$i]->fontHashIndex[$font->getHashCode()] = $this->writerWorkbook->addFont($font);
                         }
@@ -165,7 +176,7 @@ class Xls extends BaseWriter implements IWriter
 
         // initialize OLE file
         $workbookStreamName = 'Workbook';
-        $OLE = new \PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\File(\PhpOffice\PhpSpreadsheet\Shared\OLE::ascToUcs($workbookStreamName));
+        $OLE = new File(OLE::ascToUcs($workbookStreamName));
 
         // Write the worksheet streams before the global workbook stream,
         // because the byte sizes of these are needed in the global workbook stream
@@ -186,14 +197,14 @@ class Xls extends BaseWriter implements IWriter
         $this->documentSummaryInformation = $this->writeDocumentSummaryInformation();
         // initialize OLE Document Summary Information
         if (isset($this->documentSummaryInformation) && !empty($this->documentSummaryInformation)) {
-            $OLE_DocumentSummaryInformation = new \PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\File(\PhpOffice\PhpSpreadsheet\Shared\OLE::ascToUcs(chr(5) . 'DocumentSummaryInformation'));
+            $OLE_DocumentSummaryInformation = new File(OLE::ascToUcs(chr(5) . 'DocumentSummaryInformation'));
             $OLE_DocumentSummaryInformation->append($this->documentSummaryInformation);
         }
 
         $this->summaryInformation = $this->writeSummaryInformation();
         // initialize OLE Summary Information
         if (isset($this->summaryInformation) && !empty($this->summaryInformation)) {
-            $OLE_SummaryInformation = new \PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\File(\PhpOffice\PhpSpreadsheet\Shared\OLE::ascToUcs(chr(5) . 'SummaryInformation'));
+            $OLE_SummaryInformation = new File(OLE::ascToUcs(chr(5) . 'SummaryInformation'));
             $OLE_SummaryInformation->append($this->summaryInformation);
         }
 
@@ -208,12 +219,12 @@ class Xls extends BaseWriter implements IWriter
             $arrRootData[] = $OLE_DocumentSummaryInformation;
         }
 
-        $root = new \PhpOffice\PhpSpreadsheet\Shared\OLE\PPS\Root(time(), time(), $arrRootData);
+        $root = new Root(time(), time(), $arrRootData);
         // save the OLE file
-        $res = $root->save($pFilename);
+        $root->save($pFilename);
 
-        \PhpOffice\PhpSpreadsheet\Calculation\Functions::setReturnDateType($saveDateReturnType);
-        \PhpOffice\PhpSpreadsheet\Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
+        Functions::setReturnDateType($saveDateReturnType);
+        Calculation::getInstance($this->spreadsheet)->getDebugLog()->setWriteDebugLog($saveDebugLog);
     }
 
     /**
@@ -239,10 +250,10 @@ class Xls extends BaseWriter implements IWriter
             }
 
             // create intermediate Escher object
-            $escher = new \PhpOffice\PhpSpreadsheet\Shared\Escher();
+            $escher = new Escher();
 
             // dgContainer
-            $dgContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer();
+            $dgContainer = new DgContainer();
 
             // set the drawing index (we use sheet index + 1)
             $dgId = $sheet->getParent()->getIndex($sheet) + 1;
@@ -250,11 +261,11 @@ class Xls extends BaseWriter implements IWriter
             $escher->setDgContainer($dgContainer);
 
             // spgrContainer
-            $spgrContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer();
+            $spgrContainer = new SpgrContainer();
             $dgContainer->setSpgrContainer($spgrContainer);
 
             // add one shape which is the group shape
-            $spContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer\SpContainer();
+            $spContainer = new SpContainer();
             $spContainer->setSpgr(true);
             $spContainer->setSpType(0);
             $spContainer->setSpId(($sheet->getParent()->getIndex($sheet) + 1) << 10);
@@ -270,7 +281,7 @@ class Xls extends BaseWriter implements IWriter
                 ++$countShapes[$sheetIndex];
 
                 // add the shape
-                $spContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer\SpContainer();
+                $spContainer = new SpContainer();
 
                 // set the shape type
                 $spContainer->setSpType(0x004B);
@@ -312,7 +323,7 @@ class Xls extends BaseWriter implements IWriter
 
             // AutoFilters
             if (!empty($filterRange)) {
-                $rangeBounds = \PhpOffice\PhpSpreadsheet\Cell::rangeBoundaries($filterRange);
+                $rangeBounds = Coordinate::rangeBoundaries($filterRange);
                 $iNumColStart = $rangeBounds[0][0];
                 $iNumColEnd = $rangeBounds[1][0];
 
@@ -321,14 +332,14 @@ class Xls extends BaseWriter implements IWriter
                     ++$countShapes[$sheetIndex];
 
                     // create an Drawing Object for the dropdown
-                    $oDrawing = new \PhpOffice\PhpSpreadsheet\Worksheet\BaseDrawing();
+                    $oDrawing = new BaseDrawing();
                     // get the coordinates of drawing
-                    $cDrawing = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($iInc - 1) . $rangeBounds[0][1];
+                    $cDrawing = Coordinate::stringFromColumnIndex($iInc) . $rangeBounds[0][1];
                     $oDrawing->setCoordinates($cDrawing);
                     $oDrawing->setWorksheet($sheet);
 
                     // add the shape
-                    $spContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DgContainer\SpgrContainer\SpContainer();
+                    $spContainer = new SpContainer();
                     // set the shape type
                     $spContainer->setSpType(0x00C9);
                     // set the shape flag
@@ -352,7 +363,7 @@ class Xls extends BaseWriter implements IWriter
                     $spContainer->setOPT(0x03BF, 0x000A0000); // Group Shape -> fPrint
 
                     // set coordinates and offsets, client anchor
-                    $endCoordinates = \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($iInc - 1);
+                    $endCoordinates = Coordinate::stringFromColumnIndex($iInc);
                     $endCoordinates .= $rangeBounds[0][1] + 1;
 
                     $spContainer->setStartCoordinates($cDrawing);
@@ -390,6 +401,7 @@ class Xls extends BaseWriter implements IWriter
         foreach ($this->spreadsheet->getAllSheets() as $sheet) {
             if (count($sheet->getDrawingCollection()) > 0) {
                 $found = true;
+
                 break;
             }
         }
@@ -400,10 +412,10 @@ class Xls extends BaseWriter implements IWriter
         }
 
         // if we reach here, then there are drawings in the workbook
-        $escher = new \PhpOffice\PhpSpreadsheet\Shared\Escher();
+        $escher = new Escher();
 
         // dggContainer
-        $dggContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer();
+        $dggContainer = new DggContainer();
         $escher->setDggContainer($dggContainer);
 
         // set IDCLs (identifier clusters)
@@ -435,66 +447,72 @@ class Xls extends BaseWriter implements IWriter
         $dggContainer->setCSpSaved($totalCountShapes + $countDrawings); // total number of shapes incl. one group shapes per drawing
 
         // bstoreContainer
-        $bstoreContainer = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer();
+        $bstoreContainer = new BstoreContainer();
         $dggContainer->setBstoreContainer($bstoreContainer);
 
         // the BSE's (all the images)
         foreach ($this->spreadsheet->getAllsheets() as $sheet) {
             foreach ($sheet->getDrawingCollection() as $drawing) {
                 if (!extension_loaded('gd')) {
-                    throw new \RuntimeException('Saving images in xls requires gd extension');
+                    throw new RuntimeException('Saving images in xls requires gd extension');
                 }
-                if ($drawing instanceof \PhpOffice\PhpSpreadsheet\Worksheet\Drawing) {
+                if ($drawing instanceof Drawing) {
                     $filename = $drawing->getPath();
 
                     list($imagesx, $imagesy, $imageFormat) = getimagesize($filename);
 
                     switch ($imageFormat) {
                         case 1: // GIF, not supported by BIFF8, we convert to PNG
-                            $blipType = \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE::BLIPTYPE_PNG;
+                            $blipType = BSE::BLIPTYPE_PNG;
                             ob_start();
                             imagepng(imagecreatefromgif($filename));
                             $blipData = ob_get_contents();
                             ob_end_clean();
+
                             break;
                         case 2: // JPEG
-                            $blipType = \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE::BLIPTYPE_JPEG;
+                            $blipType = BSE::BLIPTYPE_JPEG;
                             $blipData = file_get_contents($filename);
+
                             break;
                         case 3: // PNG
-                            $blipType = \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE::BLIPTYPE_PNG;
+                            $blipType = BSE::BLIPTYPE_PNG;
                             $blipData = file_get_contents($filename);
+
                             break;
                         case 6: // Windows DIB (BMP), we convert to PNG
-                            $blipType = \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE::BLIPTYPE_PNG;
+                            $blipType = BSE::BLIPTYPE_PNG;
                             ob_start();
-                            imagepng(\PhpOffice\PhpSpreadsheet\Shared\Drawing::imagecreatefrombmp($filename));
+                            imagepng(SharedDrawing::imagecreatefrombmp($filename));
                             $blipData = ob_get_contents();
                             ob_end_clean();
+
                             break;
                         default:
                             continue 2;
                     }
 
-                    $blip = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE\Blip();
+                    $blip = new Blip();
                     $blip->setData($blipData);
 
-                    $BSE = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE();
+                    $BSE = new BSE();
                     $BSE->setBlipType($blipType);
                     $BSE->setBlip($blip);
 
                     $bstoreContainer->addBSE($BSE);
-                } elseif ($drawing instanceof \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing) {
+                } elseif ($drawing instanceof MemoryDrawing) {
                     switch ($drawing->getRenderingFunction()) {
-                        case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_JPEG:
-                            $blipType = \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE::BLIPTYPE_JPEG;
+                        case MemoryDrawing::RENDERING_JPEG:
+                            $blipType = BSE::BLIPTYPE_JPEG;
                             $renderingFunction = 'imagejpeg';
+
                             break;
-                        case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_GIF:
-                        case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_PNG:
-                        case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_DEFAULT:
-                            $blipType = \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE::BLIPTYPE_PNG;
+                        case MemoryDrawing::RENDERING_GIF:
+                        case MemoryDrawing::RENDERING_PNG:
+                        case MemoryDrawing::RENDERING_DEFAULT:
+                            $blipType = BSE::BLIPTYPE_PNG;
                             $renderingFunction = 'imagepng';
+
                             break;
                     }
 
@@ -503,10 +521,10 @@ class Xls extends BaseWriter implements IWriter
                     $blipData = ob_get_contents();
                     ob_end_clean();
 
-                    $blip = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE\Blip();
+                    $blip = new Blip();
                     $blip->setData($blipData);
 
-                    $BSE = new \PhpOffice\PhpSpreadsheet\Shared\Escher\DggContainer\BstoreContainer\BSE();
+                    $BSE = new BSE();
                     $BSE->setBlipType($blipType);
                     $BSE->setBlip($blip);
 
@@ -847,7 +865,7 @@ class Xls extends BaseWriter implements IWriter
                 'summary' => ['pack' => 'V', 'data' => 0x0C],
                 'offset' => ['pack' => 'V'],
                 'type' => ['pack' => 'V', 'data' => 0x40], // Filetime (64-bit value representing the number of 100-nanosecond intervals since January 1, 1601)
-                'data' => ['data' => \PhpOffice\PhpSpreadsheet\Shared\OLE::localDateToOLE($dataProp)],
+                'data' => ['data' => OLE::localDateToOLE($dataProp)],
             ];
             ++$dataSection_NumProps;
         }
@@ -858,7 +876,7 @@ class Xls extends BaseWriter implements IWriter
                 'summary' => ['pack' => 'V', 'data' => 0x0D],
                 'offset' => ['pack' => 'V'],
                 'type' => ['pack' => 'V', 'data' => 0x40], // Filetime (64-bit value representing the number of 100-nanosecond intervals since January 1, 1601)
-                'data' => ['data' => \PhpOffice\PhpSpreadsheet\Shared\OLE::localDateToOLE($dataProp)],
+                'data' => ['data' => OLE::localDateToOLE($dataProp)],
             ];
             ++$dataSection_NumProps;
         }
@@ -908,7 +926,7 @@ class Xls extends BaseWriter implements IWriter
 
                 $dataSection_Content_Offset += 4 + 8;
             }
-                // Data Type Not Used at the moment
+            // Data Type Not Used at the moment
         }
         // Now $dataSection_Content_Offset contains the size of the content
 

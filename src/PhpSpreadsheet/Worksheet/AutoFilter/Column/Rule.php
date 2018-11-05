@@ -2,28 +2,9 @@
 
 namespace PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category    PhpSpreadsheet
- *
- * @copyright   Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+use PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column;
+
 class Rule
 {
     const AUTOFILTER_RULETYPE_FILTER = 'filter';
@@ -185,19 +166,19 @@ class Rule
         self::AUTOFILTER_COLUMN_RULE_TOPTEN_BOTTOM,
     ];
 
-    /* Rule Operators (Numeric, Boolean etc) */
+    // Rule Operators (Numeric, Boolean etc)
 //    const AUTOFILTER_COLUMN_RULE_BETWEEN            = 'between';        //    greaterThanOrEqual 1 && lessThanOrEqual 2
-    /* Rule Operators (Numeric Special) which are translated to standard numeric operators with calculated values */
+    // Rule Operators (Numeric Special) which are translated to standard numeric operators with calculated values
 //    const AUTOFILTER_COLUMN_RULE_TOPTEN                = 'topTen';            //    greaterThan calculated value
 //    const AUTOFILTER_COLUMN_RULE_TOPTENPERCENT        = 'topTenPercent';    //    greaterThan calculated value
 //    const AUTOFILTER_COLUMN_RULE_ABOVEAVERAGE        = 'aboveAverage';    //    Value is calculated as the average
 //    const AUTOFILTER_COLUMN_RULE_BELOWAVERAGE        = 'belowAverage';    //    Value is calculated as the average
-    /* Rule Operators (String) which are set as wild-carded values */
+    // Rule Operators (String) which are set as wild-carded values
 //    const AUTOFILTER_COLUMN_RULE_BEGINSWITH            = 'beginsWith';            // A*
 //    const AUTOFILTER_COLUMN_RULE_ENDSWITH            = 'endsWith';            // *Z
 //    const AUTOFILTER_COLUMN_RULE_CONTAINS            = 'contains';            // *B*
 //    const AUTOFILTER_COLUMN_RULE_DOESNTCONTAIN        = 'notEqual';            //    notEqual *B*
-    /* Rule Operators (Date Special) which are translated to standard numeric operators with calculated values */
+    // Rule Operators (Date Special) which are translated to standard numeric operators with calculated values
 //    const AUTOFILTER_COLUMN_RULE_BEFORE                = 'lessThan';
 //    const AUTOFILTER_COLUMN_RULE_AFTER                = 'greaterThan';
 //    const AUTOFILTER_COLUMN_RULE_YESTERDAY            = 'yesterday';
@@ -222,9 +203,9 @@ class Rule
     /**
      * Autofilter Column.
      *
-     * @var \PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column
+     * @var Column
      */
-    private $parent = null;
+    private $parent;
 
     /**
      * Autofilter Rule Type.
@@ -257,9 +238,9 @@ class Rule
     /**
      * Create a new Rule.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column $pParent
+     * @param Column $pParent
      */
-    public function __construct(\PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column $pParent = null)
+    public function __construct(Column $pParent = null)
     {
         $this->parent = $pParent;
     }
@@ -277,16 +258,16 @@ class Rule
     /**
      * Set AutoFilter Rule Type.
      *
-     * @param string $pRuleType
+     * @param string $pRuleType see self::AUTOFILTER_RULETYPE_*
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Rule
      */
-    public function setRuleType($pRuleType = self::AUTOFILTER_RULETYPE_FILTER)
+    public function setRuleType($pRuleType)
     {
         if (!in_array($pRuleType, self::$ruleTypes)) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid rule type for column AutoFilter Rule.');
+            throw new PhpSpreadsheetException('Invalid rule type for column AutoFilter Rule.');
         }
 
         $this->ruleType = $pRuleType;
@@ -309,11 +290,11 @@ class Rule
      *
      * @param string|string[] $pValue
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Rule
      */
-    public function setValue($pValue = '')
+    public function setValue($pValue)
     {
         if (is_array($pValue)) {
             $grouping = -1;
@@ -328,7 +309,7 @@ class Rule
                 }
             }
             if (count($pValue) == 0) {
-                throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid rule value for column AutoFilter Rule.');
+                throw new PhpSpreadsheetException('Invalid rule value for column AutoFilter Rule.');
             }
             //    Set the dateTime grouping that we've anticipated
             $this->setGrouping(self::$dateTimeGroups[$grouping]);
@@ -351,20 +332,20 @@ class Rule
     /**
      * Set AutoFilter Rule Operator.
      *
-     * @param string $pOperator
+     * @param string $pOperator see self::AUTOFILTER_COLUMN_RULE_*
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Rule
      */
-    public function setOperator($pOperator = self::AUTOFILTER_COLUMN_RULE_EQUAL)
+    public function setOperator($pOperator)
     {
         if (empty($pOperator)) {
             $pOperator = self::AUTOFILTER_COLUMN_RULE_EQUAL;
         }
         if ((!in_array($pOperator, self::$operators)) &&
             (!in_array($pOperator, self::$topTenValue))) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid operator for column AutoFilter Rule.');
+            throw new PhpSpreadsheetException('Invalid operator for column AutoFilter Rule.');
         }
         $this->operator = $pOperator;
 
@@ -386,17 +367,17 @@ class Rule
      *
      * @param string $pGrouping
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Rule
      */
-    public function setGrouping($pGrouping = null)
+    public function setGrouping($pGrouping)
     {
         if (($pGrouping !== null) &&
             (!in_array($pGrouping, self::$dateTimeGroups)) &&
             (!in_array($pGrouping, self::$dynamicTypes)) &&
             (!in_array($pGrouping, self::$topTenType))) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid rule type for column AutoFilter Rule.');
+            throw new PhpSpreadsheetException('Invalid rule type for column AutoFilter Rule.');
         }
         $this->grouping = $pGrouping;
 
@@ -406,15 +387,15 @@ class Rule
     /**
      * Set AutoFilter Rule.
      *
-     * @param string $pOperator
+     * @param string $pOperator see self::AUTOFILTER_COLUMN_RULE_*
      * @param string|string[] $pValue
      * @param string $pGrouping
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return Rule
      */
-    public function setRule($pOperator = self::AUTOFILTER_COLUMN_RULE_EQUAL, $pValue = '', $pGrouping = null)
+    public function setRule($pOperator, $pValue, $pGrouping = null)
     {
         $this->setOperator($pOperator);
         $this->setValue($pValue);
@@ -431,7 +412,7 @@ class Rule
     /**
      * Get this Rule's AutoFilter Column Parent.
      *
-     * @return \PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column
+     * @return Column
      */
     public function getParent()
     {
@@ -441,11 +422,11 @@ class Rule
     /**
      * Set this Rule's AutoFilter Column Parent.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column
+     * @param Column $pParent
      *
      * @return Rule
      */
-    public function setParent(\PhpOffice\PhpSpreadsheet\Worksheet\AutoFilter\Column $pParent = null)
+    public function setParent(Column $pParent = null)
     {
         $this->parent = $pParent;
 

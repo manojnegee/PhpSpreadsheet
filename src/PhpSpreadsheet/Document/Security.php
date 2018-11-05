@@ -2,28 +2,8 @@
 
 namespace PhpOffice\PhpSpreadsheet\Document;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use PhpOffice\PhpSpreadsheet\Shared\PasswordHasher;
+
 class Security
 {
     /**
@@ -97,7 +77,7 @@ class Security
      *
      * @return Security
      */
-    public function setLockRevision($pValue = false)
+    public function setLockRevision($pValue)
     {
         $this->lockRevision = $pValue;
 
@@ -121,7 +101,7 @@ class Security
      *
      * @return Security
      */
-    public function setLockStructure($pValue = false)
+    public function setLockStructure($pValue)
     {
         $this->lockStructure = $pValue;
 
@@ -145,7 +125,7 @@ class Security
      *
      * @return Security
      */
-    public function setLockWindows($pValue = false)
+    public function setLockWindows($pValue)
     {
         $this->lockWindows = $pValue;
 
@@ -170,10 +150,10 @@ class Security
      *
      * @return Security
      */
-    public function setRevisionsPassword($pValue = '', $pAlreadyHashed = false)
+    public function setRevisionsPassword($pValue, $pAlreadyHashed = false)
     {
         if (!$pAlreadyHashed) {
-            $pValue = \PhpOffice\PhpSpreadsheet\Shared\PasswordHasher::hashPassword($pValue);
+            $pValue = PasswordHasher::hashPassword($pValue);
         }
         $this->revisionsPassword = $pValue;
 
@@ -198,10 +178,10 @@ class Security
      *
      * @return Security
      */
-    public function setWorkbookPassword($pValue = '', $pAlreadyHashed = false)
+    public function setWorkbookPassword($pValue, $pAlreadyHashed = false)
     {
         if (!$pAlreadyHashed) {
-            $pValue = \PhpOffice\PhpSpreadsheet\Shared\PasswordHasher::hashPassword($pValue);
+            $pValue = PasswordHasher::hashPassword($pValue);
         }
         $this->workbookPassword = $pValue;
 

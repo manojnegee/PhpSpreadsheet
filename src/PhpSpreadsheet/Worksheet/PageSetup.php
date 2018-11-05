@@ -2,30 +2,12 @@
 
 namespace PhpOffice\PhpSpreadsheet\Worksheet;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+
 /**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- *
  * <code>
- * Paper size taken from Office Open XML Part 4 - Markup Language Reference, page 1988:
+ * Paper size taken from Office Open XML Part 4 - Markup Language Reference, page 1988:.
  *
  * 1 = Letter paper (8.5 in. by 11 in.)
  * 2 = Letter small paper (8.5 in. by 11 in.)
@@ -101,7 +83,7 @@ namespace PhpOffice\PhpSpreadsheet\Worksheet;
  */
 class PageSetup
 {
-    /* Paper size */
+    // Paper size
     const PAPERSIZE_LETTER = 1;
     const PAPERSIZE_LETTER_SMALL = 2;
     const PAPERSIZE_TABLOID = 3;
@@ -169,12 +151,12 @@ class PageSetup
     const PAPERSIZE_A3_TRANSVERSE_PAPER = 65;
     const PAPERSIZE_A3_EXTRA_TRANSVERSE_PAPER = 66;
 
-    /* Page orientation */
+    // Page orientation
     const ORIENTATION_DEFAULT = 'default';
     const ORIENTATION_LANDSCAPE = 'landscape';
     const ORIENTATION_PORTRAIT = 'portrait';
 
-    /* Print Range Set Method */
+    // Print Range Set Method
     const SETPRINTRANGE_OVERWRITE = 'O';
     const SETPRINTRANGE_INSERT = 'I';
 
@@ -259,14 +241,14 @@ class PageSetup
      *
      * @var string
      */
-    private $printArea = null;
+    private $printArea;
 
     /**
      * First page number.
      *
      * @var int
      */
-    private $firstPageNumber = null;
+    private $firstPageNumber;
 
     /**
      * Create a new PageSetup.
@@ -288,11 +270,11 @@ class PageSetup
     /**
      * Set Paper Size.
      *
-     * @param int $pValue
+     * @param int $pValue see self::PAPERSIZE_*
      *
      * @return PageSetup
      */
-    public function setPaperSize($pValue = self::PAPERSIZE_LETTER)
+    public function setPaperSize($pValue)
     {
         $this->paperSize = $pValue;
 
@@ -312,11 +294,11 @@ class PageSetup
     /**
      * Set Orientation.
      *
-     * @param string $pValue
+     * @param string $pValue see self::ORIENTATION_*
      *
      * @return PageSetup
      */
-    public function setOrientation($pValue = self::ORIENTATION_DEFAULT)
+    public function setOrientation($pValue)
     {
         $this->orientation = $pValue;
 
@@ -335,28 +317,27 @@ class PageSetup
 
     /**
      * Set Scale.
-     *
      * Print scaling. Valid values range from 10 to 400
-     * This setting is overridden when fitToWidth and/or fitToHeight are in use
+     * This setting is overridden when fitToWidth and/or fitToHeight are in use.
      *
-     * @param int? $pValue
+     * @param null|int $pValue
      * @param bool $pUpdate Update fitToPage so scaling applies rather than fitToHeight / fitToWidth
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return PageSetup
      */
-    public function setScale($pValue = 100, $pUpdate = true)
+    public function setScale($pValue, $pUpdate = true)
     {
         // Microsoft Office Excel 2007 only allows setting a scale between 10 and 400 via the user interface,
         // but it is apparently still able to handle any scale >= 0, where 0 results in 100
-        if (($pValue >= 0) || is_null($pValue)) {
+        if (($pValue >= 0) || $pValue === null) {
             $this->scale = $pValue;
             if ($pUpdate) {
                 $this->fitToPage = false;
             }
         } else {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Scale must not be negative');
+            throw new PhpSpreadsheetException('Scale must not be negative');
         }
 
         return $this;
@@ -379,7 +360,7 @@ class PageSetup
      *
      * @return PageSetup
      */
-    public function setFitToPage($pValue = true)
+    public function setFitToPage($pValue)
     {
         $this->fitToPage = $pValue;
 
@@ -399,12 +380,12 @@ class PageSetup
     /**
      * Set Fit To Height.
      *
-     * @param int? $pValue
+     * @param null|int $pValue
      * @param bool $pUpdate Update fitToPage so it applies rather than scaling
      *
      * @return PageSetup
      */
-    public function setFitToHeight($pValue = 1, $pUpdate = true)
+    public function setFitToHeight($pValue, $pUpdate = true)
     {
         $this->fitToHeight = $pValue;
         if ($pUpdate) {
@@ -427,12 +408,12 @@ class PageSetup
     /**
      * Set Fit To Width.
      *
-     * @param int? $pValue
+     * @param null|int $pValue
      * @param bool $pUpdate Update fitToPage so it applies rather than scaling
      *
      * @return PageSetup
      */
-    public function setFitToWidth($pValue = 1, $pUpdate = true)
+    public function setFitToWidth($pValue, $pUpdate = true)
     {
         $this->fitToWidth = $pValue;
         if ($pUpdate) {
@@ -475,11 +456,9 @@ class PageSetup
      *
      * @return PageSetup
      */
-    public function setColumnsToRepeatAtLeft($pValue = null)
+    public function setColumnsToRepeatAtLeft(array $pValue)
     {
-        if (is_array($pValue)) {
-            $this->columnsToRepeatAtLeft = $pValue;
-        }
+        $this->columnsToRepeatAtLeft = $pValue;
 
         return $this;
     }
@@ -487,12 +466,12 @@ class PageSetup
     /**
      * Set Columns to repeat at left by start and end.
      *
-     * @param string $pStart
-     * @param string $pEnd
+     * @param string $pStart eg: 'A'
+     * @param string $pEnd eg: 'B'
      *
      * @return PageSetup
      */
-    public function setColumnsToRepeatAtLeftByStartAndEnd($pStart = 'A', $pEnd = 'A')
+    public function setColumnsToRepeatAtLeftByStartAndEnd($pStart, $pEnd)
     {
         $this->columnsToRepeatAtLeft = [$pStart, $pEnd];
 
@@ -532,11 +511,9 @@ class PageSetup
      *
      * @return PageSetup
      */
-    public function setRowsToRepeatAtTop($pValue = null)
+    public function setRowsToRepeatAtTop(array $pValue)
     {
-        if (is_array($pValue)) {
-            $this->rowsToRepeatAtTop = $pValue;
-        }
+        $this->rowsToRepeatAtTop = $pValue;
 
         return $this;
     }
@@ -544,12 +521,12 @@ class PageSetup
     /**
      * Set Rows to repeat at top by start and end.
      *
-     * @param int $pStart
-     * @param int $pEnd
+     * @param int $pStart eg: 1
+     * @param int $pEnd eg: 1
      *
      * @return PageSetup
      */
-    public function setRowsToRepeatAtTopByStartAndEnd($pStart = 1, $pEnd = 1)
+    public function setRowsToRepeatAtTopByStartAndEnd($pStart, $pEnd)
     {
         $this->rowsToRepeatAtTop = [$pStart, $pEnd];
 
@@ -573,7 +550,7 @@ class PageSetup
      *
      * @return PageSetup
      */
-    public function setHorizontalCentered($value = false)
+    public function setHorizontalCentered($value)
     {
         $this->horizontalCentered = $value;
 
@@ -597,7 +574,7 @@ class PageSetup
      *
      * @return PageSetup
      */
-    public function setVerticalCentered($value = false)
+    public function setVerticalCentered($value)
     {
         $this->verticalCentered = $value;
 
@@ -612,7 +589,7 @@ class PageSetup
      *                            Otherwise, the specific range identified by the value of $index will be returned
      *                            Print areas are numbered from 1
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return string
      */
@@ -625,7 +602,8 @@ class PageSetup
         if (isset($printAreas[$index - 1])) {
             return $printAreas[$index - 1];
         }
-        throw new \PhpOffice\PhpSpreadsheet\Exception('Requested Print Area does not exist');
+
+        throw new PhpSpreadsheetException('Requested Print Area does not exist');
     }
 
     /**
@@ -641,7 +619,7 @@ class PageSetup
     public function isPrintAreaSet($index = 0)
     {
         if ($index == 0) {
-            return !is_null($this->printArea);
+            return $this->printArea !== null;
         }
         $printAreas = explode(',', $this->printArea);
 
@@ -691,18 +669,18 @@ class PageSetup
      *                            Default behaviour, or the "O" method, overwrites existing print area
      *                            The "I" method, inserts the new print area before any specified index, or at the end of the list
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return PageSetup
      */
     public function setPrintArea($value, $index = 0, $method = self::SETPRINTRANGE_OVERWRITE)
     {
         if (strpos($value, '!') !== false) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Cell coordinate must not specify a worksheet.');
+            throw new PhpSpreadsheetException('Cell coordinate must not specify a worksheet.');
         } elseif (strpos($value, ':') === false) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Cell coordinate must be a range of cells.');
+            throw new PhpSpreadsheetException('Cell coordinate must be a range of cells.');
         } elseif (strpos($value, '$') !== false) {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Cell coordinate must not be absolute.');
+            throw new PhpSpreadsheetException('Cell coordinate must not be absolute.');
         }
         $value = strtoupper($value);
 
@@ -715,7 +693,7 @@ class PageSetup
                     $index = count($printAreas) - abs($index) + 1;
                 }
                 if (($index <= 0) || ($index > count($printAreas))) {
-                    throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid index for setting print range.');
+                    throw new PhpSpreadsheetException('Invalid index for setting print range.');
                 }
                 $printAreas[$index - 1] = $value;
                 $this->printArea = implode(',', $printAreas);
@@ -729,13 +707,13 @@ class PageSetup
                     $index = abs($index) - 1;
                 }
                 if ($index > count($printAreas)) {
-                    throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid index for setting print range.');
+                    throw new PhpSpreadsheetException('Invalid index for setting print range.');
                 }
                 $printAreas = array_merge(array_slice($printAreas, 0, $index), [$value], array_slice($printAreas, $index));
                 $this->printArea = implode(',', $printAreas);
             }
         } else {
-            throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid method for setting print range.');
+            throw new PhpSpreadsheetException('Invalid method for setting print range.');
         }
 
         return $this;
@@ -752,7 +730,7 @@ class PageSetup
      *                                list.
      *                            Print areas are numbered from 1
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return PageSetup
      */
@@ -771,7 +749,7 @@ class PageSetup
      * @param int $index Identifier for a specific print area range allowing several ranges to be set
      *                                When the method is "O"verwrite, then a positive integer index will overwrite that indexed
      *                                    entry in the print areas list; a negative index value will identify which entry to
-     *                                    overwrite working bacward through the print area to the list, with the last entry as -1.
+     *                                    overwrite working backward through the print area to the list, with the last entry as -1.
      *                                    Specifying an index value of 0, will overwrite <b>all</b> existing print ranges.
      *                                When the method is "I"nsert, then a positive index will insert after that indexed entry in
      *                                    the print areas list, while a negative index will insert before the indexed entry.
@@ -782,14 +760,14 @@ class PageSetup
      *                                Default behaviour, or the "O" method, overwrites existing print area
      *                                The "I" method, inserts the new print area before any specified index, or at the end of the list
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return PageSetup
      */
     public function setPrintAreaByColumnAndRow($column1, $row1, $column2, $row2, $index = 0, $method = self::SETPRINTRANGE_OVERWRITE)
     {
         return $this->setPrintArea(
-            \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column1) . $row1 . ':' . \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column2) . $row2,
+            Coordinate::stringFromColumnIndex($column1) . $row1 . ':' . Coordinate::stringFromColumnIndex($column2) . $row2,
             $index,
             $method
         );
@@ -809,14 +787,14 @@ class PageSetup
      *                                    list.
      *                                Print areas are numbered from 1
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return PageSetup
      */
     public function addPrintAreaByColumnAndRow($column1, $row1, $column2, $row2, $index = -1)
     {
         return $this->setPrintArea(
-            \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column1) . $row1 . ':' . \PhpOffice\PhpSpreadsheet\Cell::stringFromColumnIndex($column2) . $row2,
+            Coordinate::stringFromColumnIndex($column1) . $row1 . ':' . Coordinate::stringFromColumnIndex($column2) . $row2,
             $index,
             self::SETPRINTRANGE_INSERT
         );
@@ -839,7 +817,7 @@ class PageSetup
      *
      * @return PageSetup
      */
-    public function setFirstPageNumber($value = null)
+    public function setFirstPageNumber($value)
     {
         $this->firstPageNumber = $value;
 

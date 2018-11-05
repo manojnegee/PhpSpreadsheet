@@ -2,28 +2,8 @@
 
 namespace PhpOffice\PhpSpreadsheet;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
+
 class Comment implements IComparable
 {
     /**
@@ -91,8 +71,6 @@ class Comment implements IComparable
 
     /**
      * Create a new Comment.
-     *
-     * @throws Exception
      */
     public function __construct()
     {
@@ -116,13 +94,13 @@ class Comment implements IComparable
     /**
      * Set Author.
      *
-     * @param string $pValue
+     * @param string $author
      *
      * @return Comment
      */
-    public function setAuthor($pValue = '')
+    public function setAuthor($author)
     {
-        $this->author = $pValue;
+        $this->author = $author;
 
         return $this;
     }
@@ -164,13 +142,13 @@ class Comment implements IComparable
     /**
      * Set comment width (CSS style, i.e. XXpx or YYpt).
      *
-     * @param string $value
+     * @param string $width
      *
      * @return Comment
      */
-    public function setWidth($value = '96pt')
+    public function setWidth($width)
     {
-        $this->width = $value;
+        $this->width = $width;
 
         return $this;
     }
@@ -192,7 +170,7 @@ class Comment implements IComparable
      *
      * @return Comment
      */
-    public function setHeight($value = '55.5pt')
+    public function setHeight($value)
     {
         $this->height = $value;
 
@@ -216,7 +194,7 @@ class Comment implements IComparable
      *
      * @return Comment
      */
-    public function setMarginLeft($value = '59.25pt')
+    public function setMarginLeft($value)
     {
         $this->marginLeft = $value;
 
@@ -240,7 +218,7 @@ class Comment implements IComparable
      *
      * @return Comment
      */
-    public function setMarginTop($value = '1.5pt')
+    public function setMarginTop($value)
     {
         $this->marginTop = $value;
 
@@ -264,7 +242,7 @@ class Comment implements IComparable
      *
      * @return Comment
      */
-    public function setVisible($value = false)
+    public function setVisible($value)
     {
         $this->visible = $value;
 
@@ -284,13 +262,13 @@ class Comment implements IComparable
     /**
      * Set Alignment.
      *
-     * @param string $pValue
+     * @param string $alignment see Style\Alignment::HORIZONTAL_*
      *
      * @return Comment
      */
-    public function setAlignment($pValue = Style\Alignment::HORIZONTAL_GENERAL)
+    public function setAlignment($alignment)
     {
-        $this->alignment = $pValue;
+        $this->alignment = $alignment;
 
         return $this;
     }

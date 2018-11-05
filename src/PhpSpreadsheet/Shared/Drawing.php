@@ -2,28 +2,6 @@
 
 namespace PhpOffice\PhpSpreadsheet\Shared;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
 class Drawing
 {
     /**
@@ -33,7 +11,7 @@ class Drawing
      *
      * @return int Value in EMU
      */
-    public static function pixelsToEMU($pValue = 0)
+    public static function pixelsToEMU($pValue)
     {
         return round($pValue * 9525);
     }
@@ -45,7 +23,7 @@ class Drawing
      *
      * @return int Value in pixels
      */
-    public static function EMUToPixels($pValue = 0)
+    public static function EMUToPixels($pValue)
     {
         if ($pValue != 0) {
             return round($pValue / 9525);
@@ -70,13 +48,13 @@ class Drawing
         $name = $pDefaultFont->getName();
         $size = $pDefaultFont->getSize();
 
-        if (isset(\PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths[$name][$size])) {
+        if (isset(Font::$defaultColumnWidths[$name][$size])) {
             // Exact width can be determined
-            $colWidth = $pValue * \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths[$name][$size]['width'] / \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths[$name][$size]['px'];
+            $colWidth = $pValue * Font::$defaultColumnWidths[$name][$size]['width'] / Font::$defaultColumnWidths[$name][$size]['px'];
         } else {
             // We don't have data for this particular font and size, use approximation by
             // extrapolating from Calibri 11
-            $colWidth = $pValue * 11 * \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths['Calibri'][11]['width'] / \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths['Calibri'][11]['px'] / $size;
+            $colWidth = $pValue * 11 * Font::$defaultColumnWidths['Calibri'][11]['width'] / Font::$defaultColumnWidths['Calibri'][11]['px'] / $size;
         }
 
         return $colWidth;
@@ -96,13 +74,13 @@ class Drawing
         $name = $pDefaultFont->getName();
         $size = $pDefaultFont->getSize();
 
-        if (isset(\PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths[$name][$size])) {
+        if (isset(Font::$defaultColumnWidths[$name][$size])) {
             // Exact width can be determined
-            $colWidth = $pValue * \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths[$name][$size]['px'] / \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths[$name][$size]['width'];
+            $colWidth = $pValue * Font::$defaultColumnWidths[$name][$size]['px'] / Font::$defaultColumnWidths[$name][$size]['width'];
         } else {
             // We don't have data for this particular font and size, use approximation by
             // extrapolating from Calibri 11
-            $colWidth = $pValue * $size * \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths['Calibri'][11]['px'] / \PhpOffice\PhpSpreadsheet\Shared\Font::$defaultColumnWidths['Calibri'][11]['width'] / 11;
+            $colWidth = $pValue * $size * Font::$defaultColumnWidths['Calibri'][11]['px'] / Font::$defaultColumnWidths['Calibri'][11]['width'] / 11;
         }
 
         // Round pixels to closest integer
@@ -118,7 +96,7 @@ class Drawing
      *
      * @return float Value in points
      */
-    public static function pixelsToPoints($pValue = 0)
+    public static function pixelsToPoints($pValue)
     {
         return $pValue * 0.67777777;
     }
@@ -130,7 +108,7 @@ class Drawing
      *
      * @return int Value in pixels
      */
-    public static function pointsToPixels($pValue = 0)
+    public static function pointsToPixels($pValue)
     {
         if ($pValue != 0) {
             return (int) ceil($pValue * 1.333333333);
@@ -146,7 +124,7 @@ class Drawing
      *
      * @return int Angle
      */
-    public static function degreesToAngle($pValue = 0)
+    public static function degreesToAngle($pValue)
     {
         return (int) round($pValue * 60000);
     }
@@ -158,7 +136,7 @@ class Drawing
      *
      * @return int Degrees
      */
-    public static function angleToDegrees($pValue = 0)
+    public static function angleToDegrees($pValue)
     {
         if ($pValue != 0) {
             return round($pValue / 60000);

@@ -2,28 +2,8 @@
 
 namespace PhpOffice\PhpSpreadsheet\Chart;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category    PhpSpreadsheet
- *
- * @copyright    Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license        http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+
 class DataSeries
 {
     const TYPE_BARCHART = 'barChart';
@@ -34,15 +14,15 @@ class DataSeries
     const TYPE_AREACHART_3D = 'area3DChart';
     const TYPE_PIECHART = 'pieChart';
     const TYPE_PIECHART_3D = 'pie3DChart';
-    const TYPE_DOUGHTNUTCHART = 'doughnutChart';
-    const TYPE_DONUTCHART = self::TYPE_DOUGHTNUTCHART; //    Synonym
+    const TYPE_DOUGHNUTCHART = 'doughnutChart';
+    const TYPE_DONUTCHART = self::TYPE_DOUGHNUTCHART; // Synonym
     const TYPE_SCATTERCHART = 'scatterChart';
     const TYPE_SURFACECHART = 'surfaceChart';
     const TYPE_SURFACECHART_3D = 'surface3DChart';
     const TYPE_RADARCHART = 'radarChart';
     const TYPE_BUBBLECHART = 'bubbleChart';
     const TYPE_STOCKCHART = 'stockChart';
-    const TYPE_CANDLECHART = self::TYPE_STOCKCHART; //    Synonym
+    const TYPE_CANDLECHART = self::TYPE_STOCKCHART; // Synonym
 
     const GROUPING_CLUSTERED = 'clustered';
     const GROUPING_STACKED = 'stacked';
@@ -84,7 +64,7 @@ class DataSeries
     /**
      * Plot Style.
      *
-     * @var string
+     * @var null|string
      */
     private $plotStyle;
 
@@ -128,34 +108,35 @@ class DataSeries
      *
      * @param null|mixed $plotType
      * @param null|mixed $plotGrouping
-     * @param mixed $plotOrder
-     * @param mixed $plotLabel
-     * @param mixed $plotCategory
-     * @param mixed $plotValues
-     * @param null|mixed $plotDirection
-     * @param null|mixed $smoothLine
-     * @param null|mixed $plotStyle
+     * @param int[] $plotOrder
+     * @param DataSeriesValues[] $plotLabel
+     * @param DataSeriesValues[] $plotCategory
+     * @param DataSeriesValues[] $plotValues
+     * @param null|string $plotDirection
+     * @param bool $smoothLine
+     * @param null|string $plotStyle
      */
-    public function __construct($plotType = null, $plotGrouping = null, $plotOrder = [], $plotLabel = [], $plotCategory = [], $plotValues = [], $plotDirection = null, $smoothLine = null, $plotStyle = null)
+    public function __construct($plotType = null, $plotGrouping = null, array $plotOrder = [], array $plotLabel = [], array $plotCategory = [], array $plotValues = [], $plotDirection = null, $smoothLine = false, $plotStyle = null)
     {
         $this->plotType = $plotType;
         $this->plotGrouping = $plotGrouping;
         $this->plotOrder = $plotOrder;
         $keys = array_keys($plotValues);
         $this->plotValues = $plotValues;
-        if ((count($plotLabel) == 0) || (is_null($plotLabel[$keys[0]]))) {
+        if ((count($plotLabel) == 0) || ($plotLabel[$keys[0]] === null)) {
             $plotLabel[$keys[0]] = new DataSeriesValues();
         }
-
         $this->plotLabel = $plotLabel;
-        if ((count($plotCategory) == 0) || (is_null($plotCategory[$keys[0]]))) {
+
+        if ((count($plotCategory) == 0) || ($plotCategory[$keys[0]] === null)) {
             $plotCategory[$keys[0]] = new DataSeriesValues();
         }
         $this->plotCategory = $plotCategory;
+
         $this->smoothLine = $smoothLine;
         $this->plotStyle = $plotStyle;
 
-        if (is_null($plotDirection)) {
+        if ($plotDirection === null) {
             $plotDirection = self::DIRECTION_COL;
         }
         $this->plotDirection = $plotDirection;
@@ -178,7 +159,7 @@ class DataSeries
      *
      * @return DataSeries
      */
-    public function setPlotType($plotType = '')
+    public function setPlotType($plotType)
     {
         $this->plotType = $plotType;
 
@@ -202,7 +183,7 @@ class DataSeries
      *
      * @return DataSeries
      */
-    public function setPlotGrouping($groupingType = null)
+    public function setPlotGrouping($groupingType)
     {
         $this->plotGrouping = $groupingType;
 
@@ -226,7 +207,7 @@ class DataSeries
      *
      * @return DataSeries
      */
-    public function setPlotDirection($plotDirection = null)
+    public function setPlotDirection($plotDirection)
     {
         $this->plotDirection = $plotDirection;
 
@@ -236,7 +217,7 @@ class DataSeries
     /**
      * Get Plot Order.
      *
-     * @return string
+     * @return int[]
      */
     public function getPlotOrder()
     {
@@ -304,7 +285,7 @@ class DataSeries
     /**
      * Get Plot Style.
      *
-     * @return string
+     * @return null|string
      */
     public function getPlotStyle()
     {
@@ -314,11 +295,11 @@ class DataSeries
     /**
      * Set Plot Style.
      *
-     * @param string $plotStyle
+     * @param null|string $plotStyle
      *
      * @return DataSeries
      */
-    public function setPlotStyle($plotStyle = null)
+    public function setPlotStyle($plotStyle)
     {
         $this->plotStyle = $plotStyle;
 
@@ -381,14 +362,14 @@ class DataSeries
      *
      * @return DataSeries
      */
-    public function setSmoothLine($smoothLine = true)
+    public function setSmoothLine($smoothLine)
     {
         $this->smoothLine = $smoothLine;
 
         return $this;
     }
 
-    public function refresh(\PhpOffice\PhpSpreadsheet\Worksheet $worksheet)
+    public function refresh(Worksheet $worksheet)
     {
         foreach ($this->plotValues as $plotValues) {
             if ($plotValues !== null) {

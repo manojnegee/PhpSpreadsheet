@@ -2,41 +2,19 @@
 
 namespace PhpOffice\PhpSpreadsheet;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
 class HashTable
 {
     /**
      * HashTable elements.
      *
-     * @var mixed[]
+     * @var IComparable[]
      */
     protected $items = [];
 
     /**
      * HashTable key map.
      *
-     * @var mixed[]
+     * @var string[]
      */
     protected $keyMap = [];
 
@@ -62,13 +40,11 @@ class HashTable
      *
      * @throws Exception
      */
-    public function addFromSource($pSource = null)
+    public function addFromSource(array $pSource = null)
     {
         // Check if an array was passed
         if ($pSource == null) {
             return;
-        } elseif (!is_array($pSource)) {
-            throw new Exception('Invalid array parameter passed.');
         }
 
         foreach ($pSource as $item) {
@@ -80,10 +56,8 @@ class HashTable
      * Add HashTable item.
      *
      * @param IComparable $pSource Item to add
-     *
-     * @throws Exception
      */
-    public function add(IComparable $pSource = null)
+    public function add(IComparable $pSource)
     {
         $hash = $pSource->getHashCode();
         if (!isset($this->items[$hash])) {
@@ -96,10 +70,8 @@ class HashTable
      * Remove HashTable item.
      *
      * @param IComparable $pSource Item to remove
-     *
-     * @throws Exception
      */
-    public function remove(IComparable $pSource = null)
+    public function remove(IComparable $pSource)
     {
         $hash = $pSource->getHashCode();
         if (isset($this->items[$hash])) {
@@ -145,7 +117,7 @@ class HashTable
      *
      * @return int Index
      */
-    public function getIndexForHashCode($pHashCode = '')
+    public function getIndexForHashCode($pHashCode)
     {
         return array_search($pHashCode, $this->keyMap);
     }
@@ -157,7 +129,7 @@ class HashTable
      *
      * @return IComparable
      */
-    public function getByIndex($pIndex = 0)
+    public function getByIndex($pIndex)
     {
         if (isset($this->keyMap[$pIndex])) {
             return $this->getByHashCode($this->keyMap[$pIndex]);
@@ -173,7 +145,7 @@ class HashTable
      *
      * @return IComparable
      */
-    public function getByHashCode($pHashCode = '')
+    public function getByHashCode($pHashCode)
     {
         if (isset($this->items[$pHashCode])) {
             return $this->items[$pHashCode];

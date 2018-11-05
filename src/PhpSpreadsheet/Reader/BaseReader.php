@@ -4,28 +4,6 @@ namespace PhpOffice\PhpSpreadsheet\Reader;
 
 use PhpOffice\PhpSpreadsheet\Shared\File;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
 abstract class BaseReader implements IReader
 {
     /**
@@ -69,7 +47,7 @@ abstract class BaseReader implements IReader
      */
     protected $readFilter;
 
-    protected $fileHandle = null;
+    protected $fileHandle;
 
     /**
      * Read data only?
@@ -92,7 +70,7 @@ abstract class BaseReader implements IReader
      *
      * @return IReader
      */
-    public function setReadDataOnly($pValue = false)
+    public function setReadDataOnly($pValue)
     {
         $this->readDataOnly = (bool) $pValue;
 
@@ -120,7 +98,7 @@ abstract class BaseReader implements IReader
      *
      * @return IReader
      */
-    public function setReadEmptyCells($pValue = true)
+    public function setReadEmptyCells($pValue)
     {
         $this->readEmptyCells = (bool) $pValue;
 
@@ -150,7 +128,7 @@ abstract class BaseReader implements IReader
      *
      * @return IReader
      */
-    public function setIncludeCharts($pValue = false)
+    public function setIncludeCharts($pValue)
     {
         $this->includeCharts = (bool) $pValue;
 
@@ -178,7 +156,7 @@ abstract class BaseReader implements IReader
      *
      * @return IReader
      */
-    public function setLoadSheetsOnly($value = null)
+    public function setLoadSheetsOnly($value)
     {
         if ($value === null) {
             return $this->setLoadAllSheets();
@@ -232,8 +210,6 @@ abstract class BaseReader implements IReader
      * @param string $pFilename
      *
      * @throws Exception
-     *
-     * @return resource
      */
     protected function openFile($pFilename)
     {
@@ -252,6 +228,8 @@ abstract class BaseReader implements IReader
      * @param string $xml
      *
      * @throws Exception
+     *
+     * @return string
      */
     public function securityScan($xml)
     {
@@ -269,6 +247,8 @@ abstract class BaseReader implements IReader
      * @param string $filestream
      *
      * @throws Exception
+     *
+     * @return string
      */
     public function securityScanFile($filestream)
     {

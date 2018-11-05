@@ -2,37 +2,15 @@
 
 namespace PhpOffice\PhpSpreadsheet\Worksheet;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class MemoryDrawing extends BaseDrawing implements \PhpOffice\PhpSpreadsheet\IComparable
+class MemoryDrawing extends BaseDrawing
 {
-    /* Rendering functions */
+    // Rendering functions
     const RENDERING_DEFAULT = 'imagepng';
     const RENDERING_PNG = 'imagepng';
     const RENDERING_GIF = 'imagegif';
     const RENDERING_JPEG = 'imagejpeg';
 
-    /* MIME types */
+    // MIME types
     const MIMETYPE_DEFAULT = 'image/png';
     const MIMETYPE_PNG = 'image/png';
     const MIMETYPE_GIF = 'image/gif';
@@ -94,15 +72,15 @@ class MemoryDrawing extends BaseDrawing implements \PhpOffice\PhpSpreadsheet\ICo
     /**
      * Set image resource.
      *
-     * @param $value resource
+     * @param resource $value
      *
      * @return MemoryDrawing
      */
-    public function setImageResource($value = null)
+    public function setImageResource($value)
     {
         $this->imageResource = $value;
 
-        if (!is_null($this->imageResource)) {
+        if ($this->imageResource !== null) {
             // Get width/height
             $this->width = imagesx($this->imageResource);
             $this->height = imagesy($this->imageResource);
@@ -124,11 +102,11 @@ class MemoryDrawing extends BaseDrawing implements \PhpOffice\PhpSpreadsheet\ICo
     /**
      * Set rendering function.
      *
-     * @param string $value
+     * @param string $value see self::RENDERING_*
      *
      * @return MemoryDrawing
      */
-    public function setRenderingFunction($value = self::RENDERING_DEFAULT)
+    public function setRenderingFunction($value)
     {
         $this->renderingFunction = $value;
 
@@ -148,11 +126,11 @@ class MemoryDrawing extends BaseDrawing implements \PhpOffice\PhpSpreadsheet\ICo
     /**
      * Set mime type.
      *
-     * @param string $value
+     * @param string $value see self::MIMETYPE_*
      *
      * @return MemoryDrawing
      */
-    public function setMimeType($value = self::MIMETYPE_DEFAULT)
+    public function setMimeType($value)
     {
         $this->mimeType = $value;
 
@@ -187,20 +165,5 @@ class MemoryDrawing extends BaseDrawing implements \PhpOffice\PhpSpreadsheet\ICo
             parent::getHashCode() .
             __CLASS__
         );
-    }
-
-    /**
-     * Implement PHP __clone to create a deep clone, not just a shallow copy.
-     */
-    public function __clone()
-    {
-        $vars = get_object_vars($this);
-        foreach ($vars as $key => $value) {
-            if (is_object($value)) {
-                $this->$key = unserialize(serialize($value));
-            } else {
-                $this->$key = $value;
-            }
-        }
     }
 }

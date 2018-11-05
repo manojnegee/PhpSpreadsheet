@@ -12,8 +12,9 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Ods;
 use PhpOffice\PhpSpreadsheet\Writer\Ods\Content;
+use PHPUnit\Framework\TestCase;
 
-class ContentTest extends \PHPUnit_Framework_TestCase
+class ContentTest extends TestCase
 {
     private $samplesPath = __DIR__ . '/../../../data/Writer/Ods';
 
@@ -38,12 +39,10 @@ class ContentTest extends \PHPUnit_Framework_TestCase
 
     public function testWriteEmptySpreadsheet()
     {
-        $content = new Content();
-        $content->setParentWriter(new Ods(new Spreadsheet()));
-
+        $content = new Content(new Ods(new Spreadsheet()));
         $xml = $content->write();
 
-        $this->assertXmlStringEqualsXmlFile($this->samplesPath . '/content-empty.xml', $xml);
+        self::assertXmlStringEqualsXmlFile($this->samplesPath . '/content-empty.xml', $xml);
     }
 
     public function testWriteSpreadsheet()
@@ -91,11 +90,9 @@ class ContentTest extends \PHPUnit_Framework_TestCase
         $worksheet2->setCellValue('A1', 2);
 
         // Write
-        $content = new Content();
-        $content->setParentWriter(new Ods($workbook));
-
+        $content = new Content(new Ods($workbook));
         $xml = $content->write();
 
-        $this->assertXmlStringEqualsXmlFile($this->samplesPath . '/content-with-data.xml', $xml);
+        self::assertXmlStringEqualsXmlFile($this->samplesPath . '/content-with-data.xml', $xml);
     }
 }

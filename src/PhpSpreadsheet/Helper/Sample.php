@@ -4,6 +4,13 @@ namespace PhpOffice\PhpSpreadsheet\Helper;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\IWriter;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RecursiveRegexIterator;
+use ReflectionClass;
+use RegexIterator;
 
 /**
  * Helper class to be used in sample code.
@@ -68,13 +75,29 @@ class Sample
     public function getSamples()
     {
         // Populate samples
+        $baseDir = realpath(__DIR__ . '/../../../samples');
+        $directory = new RecursiveDirectoryIterator($baseDir);
+        $iterator = new RecursiveIteratorIterator($directory);
+        $regex = new RegexIterator($iterator, '/^.+\.php$/', RecursiveRegexIterator::GET_MATCH);
+
         $files = [];
-        foreach (glob(realpath(__DIR__ . '/../../../samples') . '/*.php') as $file) {
+        foreach ($regex as $file) {
+            $file = str_replace(str_replace('\\', '/', $baseDir) . '/', '', str_replace('\\', '/', $file[0]));
             $info = pathinfo($file);
+            $category = str_replace('_', ' ', $info['dirname']);
             $name = str_replace('_', ' ', preg_replace('/(|\.php)/', '', $info['filename']));
-            if (preg_match('/^\d+/', $name)) {
-                $files[$name] = $file;
+            if (!in_array($category, ['.', 'boostrap', 'templates'])) {
+                if (!isset($files[$category])) {
+                    $files[$category] = [];
+                }
+                $files[$category][$name] = $file;
             }
+        }
+
+        // Sort everything
+        ksort($files);
+        foreach ($files as &$f) {
+            asort($f);
         }
 
         return $files;
@@ -96,6 +119,11 @@ class Sample
         foreach ($writers as $writerType) {
             $path = $this->getFilename($filename, mb_strtolower($writerType));
             $writer = IOFactory::createWriter($spreadsheet, $writerType);
+            if ($writer instanceof Pdf) {
+                // PDF writer needs temporary directory
+                $tempDir = $this->getTemporaryFolder();
+                $writer->setTempDir($tempDir);
+            }
             $callStartTime = microtime(true);
             $writer->save($path);
             $this->logWrite($writer, $path, $callStartTime);
@@ -113,7 +141,9 @@ class Sample
     {
         $tempFolder = sys_get_temp_dir() . '/phpspreadsheet';
         if (!is_dir($tempFolder)) {
-            mkdir($tempFolder);
+            if (!mkdir($tempFolder) && !is_dir($tempFolder)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $tempFolder));
+            }
         }
 
         return $tempFolder;
@@ -129,7 +159,9 @@ class Sample
      */
     public function getFilename($filename, $extension = 'xlsx')
     {
-        return $this->getTemporaryFolder() . '/' . str_replace('.php', '.' . $extension, basename($filename));
+        $originalExtension = pathinfo($filename, PATHINFO_EXTENSION);
+
+        return $this->getTemporaryFolder() . '/' . str_replace('.' . $originalExtension, '.' . $extension, basename($filename));
     }
 
     /**
@@ -149,7 +181,8 @@ class Sample
 
     public function log($message)
     {
-        echo date('H:i:s '), $message, EOL;
+        $eol = $this->isCli() ? PHP_EOL : '<br />';
+        echo date('H:i:s ') . $message . $eol;
     }
 
     /**
@@ -164,15 +197,15 @@ class Sample
     /**
      * Log a line about the write operation.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Writer\IWriter $writer
+     * @param IWriter $writer
      * @param string $path
      * @param float $callStartTime
      */
-    public function logWrite(\PhpOffice\PhpSpreadsheet\Writer\IWriter $writer, $path, $callStartTime)
+    public function logWrite(IWriter $writer, $path, $callStartTime)
     {
         $callEndTime = microtime(true);
         $callTime = $callEndTime - $callStartTime;
-        $reflection = new \ReflectionClass($writer);
+        $reflection = new ReflectionClass($writer);
         $format = $reflection->getShortName();
         $message = "Write {$format} format to <code>{$path}</code>  in " . sprintf('%.4f', $callTime) . ' seconds';
 

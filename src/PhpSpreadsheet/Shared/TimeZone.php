@@ -2,34 +2,14 @@
 
 namespace PhpOffice\PhpSpreadsheet\Shared;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
+use DateTimeZone;
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+
 class TimeZone
 {
-    /*
-     * Default Timezone used for date/time conversions
+    /**
+     * Default Timezone used for date/time conversions.
      *
-     * @private
      * @var string
      */
     protected static $timezone = 'UTC';
@@ -43,11 +23,7 @@ class TimeZone
      */
     private static function validateTimeZone($timezone)
     {
-        if (in_array($timezone, \DateTimeZone::listIdentifiers())) {
-            return true;
-        }
-
-        return false;
+        return in_array($timezone, DateTimeZone::listIdentifiers());
     }
 
     /**
@@ -85,7 +61,7 @@ class TimeZone
      * @param string $timezone The timezone for finding the adjustment to UST
      * @param int $timestamp PHP date/time value
      *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws PhpSpreadsheetException
      *
      * @return int Number of seconds for timezone adjustment
      */
@@ -93,7 +69,7 @@ class TimeZone
     {
         if ($timezone !== null) {
             if (!self::validateTimezone($timezone)) {
-                throw new \PhpOffice\PhpSpreadsheet\Exception('Invalid timezone ' . $timezone);
+                throw new PhpSpreadsheetException('Invalid timezone ' . $timezone);
             }
         } else {
             $timezone = self::$timezone;
@@ -103,7 +79,7 @@ class TimeZone
             return 0;
         }
 
-        $objTimezone = new \DateTimeZone($timezone);
+        $objTimezone = new DateTimeZone($timezone);
         $transitions = $objTimezone->getTransitions($timestamp, $timestamp);
 
         return (count($transitions) > 0) ? $transitions[0]['offset'] : 0;

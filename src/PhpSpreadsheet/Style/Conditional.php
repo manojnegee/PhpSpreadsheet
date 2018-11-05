@@ -2,38 +2,18 @@
 
 namespace PhpOffice\PhpSpreadsheet\Style;
 
-/**
- * Copyright (c) 2006 - 2016 PhpSpreadsheet.
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * @category   PhpSpreadsheet
- *
- * @copyright  Copyright (c) 2006 - 2016 PhpSpreadsheet (https://github.com/PHPOffice/PhpSpreadsheet)
- * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- */
-class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
+use PhpOffice\PhpSpreadsheet\IComparable;
+
+class Conditional implements IComparable
 {
-    /* Condition types */
+    // Condition types
     const CONDITION_NONE = 'none';
     const CONDITION_CELLIS = 'cellIs';
     const CONDITION_CONTAINSTEXT = 'containsText';
     const CONDITION_EXPRESSION = 'expression';
     const CONDITION_CONTAINSBLANKS = 'containsBlanks';
 
-    /* Operator types */
+    // Operator types
     const OPERATOR_NONE = '';
     const OPERATOR_BEGINSWITH = 'beginsWith';
     const OPERATOR_ENDSWITH = 'endsWith';
@@ -52,14 +32,14 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @var string
      */
-    private $conditionType;
+    private $conditionType = self::CONDITION_NONE;
 
     /**
      * Operator type.
      *
      * @var string
      */
-    private $operatorType;
+    private $operatorType = self::OPERATOR_NONE;
 
     /**
      * Text.
@@ -67,6 +47,13 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
      * @var string
      */
     private $text;
+
+    /**
+     * Stop on this condition, if it matches.
+     *
+     * @var bool
+     */
+    private $stopIfTrue = false;
 
     /**
      * Condition.
@@ -78,7 +65,7 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Style.
      *
-     * @var \PhpOffice\PhpSpreadsheet\Style
+     * @var Style
      */
     private $style;
 
@@ -88,11 +75,7 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
     public function __construct()
     {
         // Initialise values
-        $this->conditionType = self::CONDITION_NONE;
-        $this->operatorType = self::OPERATOR_NONE;
-        $this->text = null;
-        $this->condition = [];
-        $this->style = new \PhpOffice\PhpSpreadsheet\Style(false, true);
+        $this->style = new Style(false, true);
     }
 
     /**
@@ -108,11 +91,11 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Set Condition type.
      *
-     * @param string $pValue Condition type
+     * @param string $pValue Condition type, see self::CONDITION_*
      *
      * @return Conditional
      */
-    public function setConditionType($pValue = self::CONDITION_NONE)
+    public function setConditionType($pValue)
     {
         $this->conditionType = $pValue;
 
@@ -132,11 +115,11 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Set Operator type.
      *
-     * @param string $pValue Conditional operator type
+     * @param string $pValue Conditional operator type, see self::OPERATOR_*
      *
      * @return Conditional
      */
-    public function setOperatorType($pValue = self::OPERATOR_NONE)
+    public function setOperatorType($pValue)
     {
         $this->operatorType = $pValue;
 
@@ -160,9 +143,33 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Conditional
      */
-    public function setText($value = null)
+    public function setText($value)
     {
         $this->text = $value;
+
+        return $this;
+    }
+
+    /**
+     * Get StopIfTrue.
+     *
+     * @return bool
+     */
+    public function getStopIfTrue()
+    {
+        return $this->stopIfTrue;
+    }
+
+    /**
+     * Set StopIfTrue.
+     *
+     * @param bool $value
+     *
+     * @return Conditional
+     */
+    public function setStopIfTrue($value)
+    {
+        $this->stopIfTrue = $value;
 
         return $this;
     }
@@ -201,7 +208,7 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
      *
      * @return Conditional
      */
-    public function addCondition($pValue = '')
+    public function addCondition($pValue)
     {
         $this->condition[] = $pValue;
 
@@ -211,7 +218,7 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Get Style.
      *
-     * @return \PhpOffice\PhpSpreadsheet\Style
+     * @return Style
      */
     public function getStyle()
     {
@@ -221,13 +228,11 @@ class Conditional implements \PhpOffice\PhpSpreadsheet\IComparable
     /**
      * Set Style.
      *
-     * @param \PhpOffice\PhpSpreadsheet\Style $pValue
-     *
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @param Style $pValue
      *
      * @return Conditional
      */
-    public function setStyle(\PhpOffice\PhpSpreadsheet\Style $pValue = null)
+    public function setStyle(Style $pValue = null)
     {
         $this->style = $pValue;
 
